@@ -1,4 +1,6 @@
-"""Models for storing and parsing aggregation layer shape files"""
+"""
+Models for storing and parsing aggregation layer shape files
+"""
 import json
 
 from django.contrib.gis.db import models
@@ -9,7 +11,9 @@ from .mixins import AggregationDataParser
 
 
 class AggregationLayer(models.Model, AggregationDataParser):
-    """Source data for aggregation layers and meta information"""
+    """
+    Source data for aggregation layers and meta information.
+    """
 
     name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -26,7 +30,9 @@ class AggregationLayer(models.Model, AggregationDataParser):
 
 
 class AggregationArea(models.Model):
-    """Aggregation area polygns"""
+    """
+    Aggregation area polygons.
+    """
 
     name = models.TextField(blank=True, null=True)
     aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True)
@@ -62,7 +68,9 @@ class AggregationArea(models.Model):
 
 
 class ValueCountResult(models.Model):
-    """A class to store precomputed value counts from raster layers"""
+    """
+    A class to store precomputed value counts from raster layers.
+    """
     rasterlayer = models.ForeignKey(RasterLayer)
     aggregationarea = models.ForeignKey(AggregationArea)
     value = models.TextField()
