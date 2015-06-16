@@ -14,7 +14,6 @@ class AggregationLayer(models.Model, AggregationDataParser):
     """
     Source data for aggregation layers and meta information.
     """
-
     name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     shapefile = models.FileField(upload_to='shapefiles/aggregationlayers')
@@ -25,15 +24,16 @@ class AggregationLayer(models.Model, AggregationDataParser):
     parse_log = models.TextField(blank=True, null=True, default='')
 
     def __unicode__(self):
-        return '{name} ({count} divisions)'.format(name=self.name,
-                            count=self.aggregationarea_set.all().count())
+        return '{name} ({count} divisions)'.format(
+            name=self.name,
+            count=self.aggregationarea_set.all().count()
+        )
 
 
 class AggregationArea(models.Model):
     """
     Aggregation area polygons.
     """
-
     name = models.TextField(blank=True, null=True)
     aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True)
     geom = models.MultiPolygonField()

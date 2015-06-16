@@ -37,7 +37,7 @@ class AggregationDataParser(object):
 
         shapefilepath = os.path.join(tmpdir, shapefilename)
 
-        # Get zipped shapefile from S3
+        # Get zipped shapefile from storage
         try:
             # Access shapefile and store locally
             shapefile = open(shapefilepath, 'wb')
@@ -73,7 +73,7 @@ class AggregationDataParser(object):
             return
 
         # Check if name column exists
-        if self.name_column not in lyr.fields:
+        if self.name_column.lower() not in [field.lower() for field in lyr.fields]:
             self.parse_log += 'Error: Name column "{0}" not found, aborted'\
                               ' parsing. Available columns: {1}'.format(self.name_column, lyr.fields)
             self.save()
@@ -106,21 +106,21 @@ class AggregationDataParser(object):
                 wgsgeom.coord_dim = 2
 
                 # Assure that feature is a valid multipolygon
-                this_geom = convert_to_multipolygon(wgsgeom.geos)
+                geom = convert_to_multipolygon(wgsgeom.geos)
             except:
                 self.parse_log += 'Warning: Failed to convert feature fid {0} to'\
                                   ' multipolygon\n'.format(feat.fid)
                 continue
 
             # Add warning if geom is not valid
-            if wgsgeom.geos.valid_reason != 'Valid Geometry':
+            if geom.valid_reason != 'Valid Geometry':
                 self.parse_log += 'Warning: Found invalid geometry for'\
                                   ' feature fid {0}\n'.format(feat.fid)
                 continue
 
             # If geom is empty, conversion was not successful, issue
             # warning and continue
-            if this_geom.empty:
+            if geom.empty:
                 self.parse_log += 'Warning: Failed to convert feature fid'\
                                   ' {0} to valid geometry\n'.format(feat.fid)
                 continue
@@ -130,10 +130,10 @@ class AggregationDataParser(object):
                 self.aggregationarea_set.create(
                     name=feat.get(self.name_column),
                     aggregationlayer=self,
-                    geom=this_geom
+                    geom=geom
                 )
             except:
-                self.parse_log += 'Warning: Failed to create AggregationArea'\
+                self.parse_log += 'Warning: Failed to create AggregationArea '\
                                   'for feature fid {0}\n'.format(feat.fid)
 
         # Add finish message to parse log
@@ -146,8 +146,10 @@ class AggregationDataParser(object):
 
     @task()
     def compute_value_count(self, simplified=True):
-        """Precomputes value counts for all existing rasterlayers"""
-        from aggregation.models import ValueCountResult
+        """
+        Precomputes value counts for all existing rasterlayers.
+        """
+        from raster_aggregation.models import ValueCountResult
 
         # Open parse log
         self.parse_log += '\n ----- Starting Value count ----- \n Computing on {0} Geometries\n'.format(
