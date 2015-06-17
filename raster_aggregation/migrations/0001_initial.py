@@ -2,14 +2,13 @@
 from __future__ import unicode_literals
 
 import django.contrib.gis.db.models.fields
-import raster_aggregation.mixins
 from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('raster', '0011_auto_20150615_0800'),
+        ('raster', '0012_auto_20150616_0538'),
     ]
 
     operations = [
@@ -35,7 +34,6 @@ class Migration(migrations.Migration):
                 ('simplification_tolerance', models.FloatField(default=0.01)),
                 ('parse_log', models.TextField(default=b'', null=True, blank=True)),
             ],
-            bases=(models.Model, raster_aggregation.mixins.AggregationDataParser),
         ),
         migrations.CreateModel(
             name='ValueCountResult',
