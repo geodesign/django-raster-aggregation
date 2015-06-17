@@ -56,9 +56,9 @@ class RasterAggregationTests(TestCase):
         results = ValueCountResult.objects.all()
         self.assertEqual(
             json.loads(results[0].value),
-            {"0": 46606, "1": 483, "2": 47, "3": 3817, "4": 29783, "8": 1213, "9": 2511}
+            {"0": 50036, "1": 536, "2": 53, "3": 4044, "4": 31134, "8": 1214, "9": 2674}
         )
         self.assertEqual(
             json.loads(results[1].value),
-            {"0": 110345, "1": 682, "2": 53, "3": 4002, "4": 31455, "8": 1272, "9": 2787}
+            {"0": 111138, "1": 700, "2": 53, "3": 4080, "4": 31632, "8": 1300, "9": 2845}
         )

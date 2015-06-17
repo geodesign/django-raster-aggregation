@@ -7,7 +7,7 @@ import zipfile
 from celery.contrib.methods import task
 
 from django.contrib.gis.gdal import CoordTransform, DataSource, SpatialReference
-from raster_aggregation.utils import convert_to_multipolygon
+from raster_aggregation.utils import WEB_MERCATOR_SRID, convert_to_multipolygon
 
 
 class AggregationDataParser(object):
@@ -74,7 +74,7 @@ class AggregationDataParser(object):
 
         # Setup transformation to default ref system
         try:
-            ct = CoordTransform(lyr.srs, SpatialReference('WGS84'))
+            ct = CoordTransform(lyr.srs, SpatialReference(WEB_MERCATOR_SRID))
         except:
             shutil.rmtree(tmpdir)
             self.parse_log += 'Error: Layer srs not specified, aborted parsing'

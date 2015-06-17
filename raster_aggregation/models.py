@@ -4,7 +4,7 @@ from django.contrib.gis.db import models
 from raster.models import RasterLayer
 from raster_aggregation.aggregator import Aggregator
 from raster_aggregation.parser import AggregationDataParser
-from raster_aggregation.utils import convert_to_multipolygon
+from raster_aggregation.utils import WEB_MERCATOR_SRID, convert_to_multipolygon
 
 
 class AggregationLayer(models.Model, AggregationDataParser, Aggregator):
@@ -33,8 +33,8 @@ class AggregationArea(models.Model):
     """
     name = models.TextField(blank=True, null=True)
     aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True)
-    geom = models.MultiPolygonField()
-    geom_simplified = models.MultiPolygonField(blank=True, null=True)
+    geom = models.MultiPolygonField(srid=WEB_MERCATOR_SRID)
+    geom_simplified = models.MultiPolygonField(srid=WEB_MERCATOR_SRID, blank=True, null=True)
     objects = models.GeoManager()
 
     def __unicode__(self):
