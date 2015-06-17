@@ -1,14 +1,12 @@
 import inspect
+import json
 import os
 import shutil
 import tempfile
-import json
 
 from django.core.files import File
-from django.core.urlresolvers import reverse
-from django.test import Client, TestCase
-from django.test.utils import override_settings
-from raster.models import Legend, LegendEntry, LegendSemantics, RasterLayer
+from django.test import TestCase
+from raster.models import RasterLayer
 from raster_aggregation.models import AggregationLayer, ValueCountResult
 
 

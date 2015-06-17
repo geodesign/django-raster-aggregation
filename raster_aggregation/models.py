@@ -1,16 +1,13 @@
-"""
-Models for storing and parsing aggregation layer shape files
-"""
 import json
 
 from django.contrib.gis.db import models
 from raster.models import RasterLayer
+from raster_aggregation.aggregator import Aggregator
+from raster_aggregation.parser import AggregationDataParser
 from raster_aggregation.utils import convert_to_multipolygon
 
-from .mixins import AggregationDataParser
 
-
-class AggregationLayer(models.Model, AggregationDataParser):
+class AggregationLayer(models.Model, AggregationDataParser, Aggregator):
     """
     Source data for aggregation layers and meta information.
     """
