@@ -21,7 +21,7 @@ class RasterAggregationTests(TestCase):
         )
 
         rasterfile = File(open(os.path.join(self.pwd, 'data/raster.tif.zip')))
-        shapefile = File(open(os.path.join(self.pwd, 'data/polygon.zip')))
+        shapefile = File(open(os.path.join(self.pwd, 'data/shapefile.zip')))
 
         self.media_root = tempfile.mkdtemp()
 
@@ -41,18 +41,24 @@ class RasterAggregationTests(TestCase):
                 name_column='name',
                 shapefile=shapefile
             )
+            # Parse aggregation layer
             self.agglayer.parse()
+        # Compute value counts
+        self.agglayer.compute_value_count()
 
     def tearDown(self):
         shutil.rmtree(self.media_root)
 
-    def test_agg(self):
-        # Compute value count
-        self.agglayer.compute_value_count()
-        # Get valuecount result
+    def test_count_value_count_results(self):
+        self.assertEqual(ValueCountResult.objects.all().count(), 2)
+
+    def test_count_values(self):
         results = ValueCountResult.objects.all()
-        self.assertEqual(results.count(), 1)
         self.assertEqual(
-            json.loads(results.first().value),
-            {"0": 46427, "1": 481, "2": 47, "3": 3797, "4": 29629, "8": 1208, "9": 2505}
+            json.loads(results[0].value),
+            {"0": 46606, "1": 483, "2": 47, "3": 3817, "4": 29783, "8": 1213, "9": 2511}
+        )
+        self.assertEqual(
+            json.loads(results[1].value),
+            {"0": 110345, "1": 682, "2": 53, "3": 4002, "4": 31455, "8": 1272, "9": 2787}
         )
