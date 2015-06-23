@@ -1,3 +1,3 @@
-# Django Raster Aggregation
-
-Use shapefiles as aggregation layers, for which zonal statistics can be computed automatically.
+Django Raster Aggregation
+=========================
+Compute raster value counts for geometries from shapefile layers.

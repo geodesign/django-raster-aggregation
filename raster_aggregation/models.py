@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from django.contrib.gis.db import models
@@ -25,6 +26,21 @@ class AggregationLayer(models.Model, AggregationDataParser, Aggregator):
             name=self.name,
             count=self.aggregationarea_set.all().count()
         )
+
+    def log(self, msg, reset=False):
+        """
+        Write a message to the parse log of the aggregationlayer instance.
+        """
+        # Prepare datetime stamp for log
+        now = '[{0}] '.format(datetime.datetime.now().strftime('%Y-%m-%d %T'))
+
+        # Write log, reset if requested
+        if reset:
+            self.parse_log = now + msg
+        else:
+            self.parse_log += '\n' + now + msg
+
+        self.save()
 
 
 class AggregationArea(models.Model):

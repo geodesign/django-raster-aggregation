@@ -1,4 +1,3 @@
-import datetime
 import os
 import shutil
 import tempfile
@@ -19,10 +18,7 @@ class AggregationDataParser(object):
         into the AggregationArea table.
         """
         # Clean previous parse log
-        bar = '\n----------------------------------\n'
-        now = '[{0}] '.format(datetime.datetime.now().strftime('%Y-%m-%d %T'))
-        self.parse_log += bar + now + 'Started parsing Aggregation Layer\n'
-        self.save()
+        self.log('Started parsing Aggregation Layer {0}'.format(self.id))
 
         tmpdir = tempfile.mkdtemp()
 
@@ -38,8 +34,8 @@ class AggregationDataParser(object):
                 shapefile.write(chunk)
             shapefile.close()
         except:
-            self.parse_log += 'Error: Could not download file, aborted parsing'
-            self.save()
+            shutil.rmtree(tmpdir)
+            self.log('Error: Could not download file, aborted parsing')
             return
 
         # Open and extract zipfile
@@ -48,8 +44,7 @@ class AggregationDataParser(object):
             zf.extractall(tmpdir)
         except:
             shutil.rmtree(tmpdir)
-            self.parse_log += 'Error: Could not open zipfile, aborted parsing'
-            self.save()
+            self.log('Error: Could not open zipfile, aborted parsing')
             return
 
         # Remove zipfile
@@ -61,15 +56,15 @@ class AggregationDataParser(object):
             lyr = ds[0]
         except:
             shutil.rmtree(tmpdir)
-            self.parse_log += 'Error: Failed to extract layer from shapefile, aborted parsing'
-            self.save()
+            self.log('Error: Failed to extract layer from shapefile, aborted parsing')
             return
 
         # Check if name column exists
         if self.name_column.lower() not in [field.lower() for field in lyr.fields]:
-            self.parse_log += 'Error: Name column "{0}" not found, aborted'\
-                              ' parsing. Available columns: {1}'.format(self.name_column, lyr.fields)
-            self.save()
+            self.log(
+                'Error: Name column "{0}" not found, aborted parsing. '
+                'Available columns: {1}'.format(self.name_column, lyr.fields)
+            )
             return
 
         # Setup transformation to default ref system
@@ -77,8 +72,7 @@ class AggregationDataParser(object):
             ct = CoordTransform(lyr.srs, SpatialReference(WEB_MERCATOR_SRID))
         except:
             shutil.rmtree(tmpdir)
-            self.parse_log += 'Error: Layer srs not specified, aborted parsing'
-            self.save()
+            self.log('Error: Layer srs not specified, aborted parsing')
             return
 
         # Remove existing patches before re-creating them
@@ -91,7 +85,7 @@ class AggregationDataParser(object):
                 wgsgeom = feat.geom
                 wgsgeom.transform(ct)
             except:
-                self.parse_log += 'Warning: Failed to transform feature fid {0}\n'.format(feat.fid)
+                self.log('Warning: Failed to transform feature fid {0}\n'.format(feat.fid))
                 continue
 
             try:
@@ -101,21 +95,27 @@ class AggregationDataParser(object):
                 # Assure that feature is a valid multipolygon
                 geom = convert_to_multipolygon(wgsgeom.geos)
             except:
-                self.parse_log += 'Warning: Failed to convert feature fid {0} to'\
-                                  ' multipolygon\n'.format(feat.fid)
+                self.log(
+                    'Warning: Failed to convert feature fid {0} to'
+                    ' multipolygon\n'.format(feat.fid)
+                )
                 continue
 
             # Add warning if geom is not valid
             if geom.valid_reason != 'Valid Geometry':
-                self.parse_log += 'Warning: Found invalid geometry for'\
-                                  ' feature fid {0}\n'.format(feat.fid)
+                self.log(
+                    'Warning: Found invalid geometry for'
+                    ' feature fid {0}\n'.format(feat.fid)
+                )
                 continue
 
             # If geom is empty, conversion was not successful, issue
             # warning and continue
             if geom.empty:
-                self.parse_log += 'Warning: Failed to convert feature fid'\
-                                  ' {0} to valid geometry\n'.format(feat.fid)
+                self.log(
+                    'Warning: Failed to convert feature fid'
+                    ' {0} to valid geometry\n'.format(feat.fid)
+                )
                 continue
 
             # Create aggregation area
@@ -126,13 +126,12 @@ class AggregationDataParser(object):
                     geom=geom
                 )
             except:
-                self.parse_log += 'Warning: Failed to create AggregationArea '\
-                                  'for feature fid {0}\n'.format(feat.fid)
+                self.log(
+                    'Warning: Failed to create AggregationArea '
+                    'for feature fid {0}\n'.format(feat.fid)
+                )
 
-        # Add finish message to parse log
-        now = '[{0}] '.format(datetime.datetime.now().strftime('%Y-%m-%d %T'))
-        self.parse_log += now + 'Finished parsing shapefile\n'
-        self.save()
+        self.log('Finished parsing Aggregation Layer {0}'.format(self.id))
 
         # Remove tempdir with unzipped shapefile
         shutil.rmtree(tmpdir)

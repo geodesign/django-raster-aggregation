@@ -8,7 +8,7 @@ from django.test import TestCase
 from raster_aggregation.models import AggregationLayer
 
 
-class RasterAggregationTests(TestCase):
+class AggregationAreaParseTests(TestCase):
 
     def setUp(self):
         # Instantiate Django file instances with nodes and links
@@ -48,5 +48,5 @@ class RasterAggregationTests(TestCase):
             'Started parsing Aggregation Layer' in self.agglayer.parse_log
         )
         self.assertTrue(
-            'Finished parsing shapefile' in self.agglayer.parse_log
+            'Finished parsing Aggregation Layer' in self.agglayer.parse_log
         )
