@@ -7,7 +7,7 @@ addons:
   postgresql : "9.3"
 
 env:
-    - DB_NAME=raster_test DJANGO_SETTINGS_MODULE=settings PYTHONPATH=$HOME/workspace/src/github.com/geodesign/django-raster-aggregation
+    - DB_NAME=raster_test DJANGO_SETTINGS_MODULE=settings PYTHONPATH=$PYTHONPATH:$HOME/workspace/src/github.com/geodesign/django-raster-aggregation
 
 before_install:
   - psql -c 'create database raster_aggregation_test;' -U postgres
@@ -16,9 +16,9 @@ before_install:
 install:
   - pip install psycopg2==2.5.3 celery==3.1.15 numpy==1.9.2 Pillow==2.7.0 django-colorful==1.0.1 flake8==2.4.0 isort==3.9.6
   - pip install git+https://github.com/geodesign/django.git@geodesign
-  - pip install git+https://github.com/geodesign/django-raster.git@django_1_9
+  - pip install git+https://github.com/geodesign/django-raster.git@master
 
-script: django-admin.py test raster_aggregation
+script: django-admin.py test
 
 notifications:
    email: false

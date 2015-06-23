@@ -21,7 +21,7 @@ class AggregationLayer(models.Model, AggregationDataParser, Aggregator):
     simplification_tolerance = models.FloatField(default=0.01)
     parse_log = models.TextField(blank=True, null=True, default='')
 
-    def __unicode__(self):
+    def __str__(self):
         return '{name} ({count} divisions)'.format(
             name=self.name,
             count=self.aggregationarea_set.all().count()
@@ -53,8 +53,8 @@ class AggregationArea(models.Model):
     geom_simplified = models.MultiPolygonField(srid=WEB_MERCATOR_SRID, blank=True, null=True)
     objects = models.GeoManager()
 
-    def __unicode__(self):
-        return "{lyr} Aggregate-Area".format(lyr=self.aggregationlayer.name)
+    def __str__(self):
+        return "{lyr} - {name}".format(lyr=self.aggregationlayer.name, name=self.name)
 
     def save(self, *args, **kwargs):
         # Reduce the geometries to simplified version
@@ -66,18 +66,16 @@ class AggregationArea(models.Model):
         super(AggregationArea, self).save(*args, **kwargs)
 
     def get_value_count(self, rasterlayer_id):
+        data = {}
         if rasterlayer_id:
-
-            try:
-                rasterlayer_id = int(rasterlayer_id)
-            except:
-                return {}
-
             result = self.valuecountresult_set.filter(
-                rasterlayer_id=rasterlayer_id)
-            if result:
-                return json.loads(result[0].value)
-        return {}
+                rasterlayer_id=rasterlayer_id
+            )
+
+            if result.exists():
+                data = json.loads(result[0].value)
+
+        return data
 
 
 class ValueCountResult(models.Model):
@@ -87,3 +85,6 @@ class ValueCountResult(models.Model):
     rasterlayer = models.ForeignKey(RasterLayer)
     aggregationarea = models.ForeignKey(AggregationArea)
     value = models.TextField()
+
+    def __str__(self):
+        return self.aggregationarea

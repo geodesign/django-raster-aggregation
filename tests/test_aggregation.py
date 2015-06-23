@@ -9,7 +9,7 @@ import numpy
 from django.core.files import File
 from django.test import TestCase
 from raster.models import RasterLayer
-from raster_aggregation.models import AggregationLayer, ValueCountResult
+from raster_aggregation.models import AggregationArea, AggregationLayer, ValueCountResult
 
 
 class RasterAggregationTests(TestCase):
@@ -86,3 +86,10 @@ class RasterAggregationTests(TestCase):
         self.assertEqual(result.pop("0"), 111138)
         # Assert value counts are correct
         self.assertEqual(result, expected)
+
+    def test_get_result_method_for_st_petersburg(self):
+        area = AggregationArea.objects.get(name='St Petersburg')
+        self.assertEqual(
+            area.get_value_count(self.rasterlayer.id),
+            {"0": 50036, "1": 536, "2": 53, "3": 4044, "4": 31134, "8": 1214, "9": 2674}
+        )
