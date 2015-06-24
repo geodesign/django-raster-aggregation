@@ -46,7 +46,7 @@ class RasterAggregationTests(TestCase):
             # Parse aggregation layer
             self.agglayer.parse()
         # Compute value counts
-        self.agglayer.compute_value_count(self.rasterlayer.id)
+        self.agglayer.compute_value_count(self.rasterlayer.id, compute_area=False)
 
     def tearDown(self):
         shutil.rmtree(self.media_root)

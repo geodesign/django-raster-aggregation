@@ -49,7 +49,7 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
                 rasterlayers = form.cleaned_data['rasterlayers']
                 simplified = form.cleaned_data['simplified']
                 for rst in rasterlayers:
-                    layer.compute_value_count.delay(rst.id, simplified=simplified)
+                    layer.compute_value_count.delay(rst.id, simplified=simplified, compute_area=True)
                 self.message_user(
                     request,
                     "Started Value Count on \"{agg}\" with {count} rasters. "

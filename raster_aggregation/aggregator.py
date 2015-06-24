@@ -9,7 +9,7 @@ from raster.models import RasterLayer
 class Aggregator(object):
 
     @task()
-    def compute_value_count(self, layer_id, simplified=True):
+    def compute_value_count(self, layer_id, simplified=True, compute_area=True):
         """
         Precomputes value counts for all existing rasterlayers.
         """
@@ -44,7 +44,7 @@ class Aggregator(object):
             else:
                 geom = area.geom
             try:
-                count = rast.value_count(geom)
+                count = rast.value_count(geom, area=compute_area)
                 ValueCountResult.objects.create(
                     rasterlayer=rast,
                     aggregationarea=area,
