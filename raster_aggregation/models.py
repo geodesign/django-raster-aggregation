@@ -87,4 +87,4 @@ class ValueCountResult(models.Model):
     value = models.TextField()
 
     def __str__(self):
-        return self.aggregationarea
+        return "{id} - {area}".format(id=self.id, area=self.aggregationarea.name)
