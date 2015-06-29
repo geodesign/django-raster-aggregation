@@ -58,7 +58,7 @@ class RasterAggregationTests(TestCase):
         result = ValueCountResult.objects.get(aggregationarea__name='St Petersburg')
         self.assertEqual(
             json.loads(result.value),
-            {"0": 50036, "1": 536, "2": 53, "3": 4044, "4": 31134, "8": 1214, "9": 2674}
+            {'0': 49949, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
         )
 
     def test_count_values_for_coverall(self):
@@ -77,13 +77,13 @@ class RasterAggregationTests(TestCase):
         # Assert totals are correct
         self.assertEqual(
             sum(result.values()),
-            sum(expected.values()) + (111138 - expected["0"])
+            sum(expected.values()) + (111049 - expected["0"])
         )
         # Remove nodata value - the tiles are not entirely
         # covered by the coverall geom.
         expected.pop("0")
         # Assert the nodata value is as expected
-        self.assertEqual(result.pop("0"), 111138)
+        self.assertEqual(result.pop("0"), 111049)
         # Assert value counts are correct
         self.assertEqual(result, expected)
 
@@ -91,5 +91,5 @@ class RasterAggregationTests(TestCase):
         area = AggregationArea.objects.get(name='St Petersburg')
         self.assertEqual(
             area.get_value_count(self.rasterlayer.id),
-            {"0": 50036, "1": 536, "2": 53, "3": 4044, "4": 31134, "8": 1214, "9": 2674}
+            {'0': 49949, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
         )

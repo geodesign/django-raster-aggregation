@@ -16,7 +16,7 @@ class Aggregator(object):
         from raster_aggregation.models import ValueCountResult
 
         lyr = RasterLayer.objects.get(id=layer_id)
-        if lyr.datatype != 'ca':
+        if lyr.datatype not in ['ca', 'ma']:
             self.log(
                 'ERROR: Rasterlayer {0} is not categorical. '
                 'Can only compute value counts on categorical layers'
@@ -45,10 +45,15 @@ class Aggregator(object):
                 geom = area.geom
             try:
                 count = rast.value_count(geom, area=compute_area)
+                # Convert keys to string before dumping json
+                str_count = {}
+                for key, val in count.items():
+                    str_count[str(key)] = val
+
                 ValueCountResult.objects.create(
                     rasterlayer=rast,
                     aggregationarea=area,
-                    value=json.dumps(count)
+                    value=json.dumps(str_count)
                 )
             except:
                 self.log(

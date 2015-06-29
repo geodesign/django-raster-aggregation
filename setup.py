@@ -20,7 +20,10 @@ setup(
     install_requires=[
         'Django>=1.8',
         'django-raster>=0.1.6',
-        'celery>=3.1.18'
+        'celery>=3.1.18',
+        'djangorestframework>=3.1.3',
+        'djangorestframework-csv>=1.3.3',
+        'djangorestframework-gis>=0.9'
     ],
     keywords=['django', 'raster', 'gis', 'gdal', 'celery', 'geo', 'spatial'],
     classifiers=[
