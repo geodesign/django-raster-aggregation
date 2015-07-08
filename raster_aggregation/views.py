@@ -8,6 +8,7 @@ from rest_framework_csv import renderers
 from rest_framework_gis.filters import InBBOXFilter
 
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.views.generic import View
 from raster import tiler
 from raster.formulas import RasterAlgebraParser
@@ -26,7 +27,7 @@ class AggregationView(View):
     def get(self, request, *args, **kwargs):
         # Get aggregation area
         area_id = self.kwargs.get('area')
-        area = AggregationArea.objects.get(id=area_id)
+        area = get_object_or_404(AggregationArea, id=area_id)
 
         # Compute tilerange for this area and the given zoom level
         zoom = int(request.GET.get('zoom'))

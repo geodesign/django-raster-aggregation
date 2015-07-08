@@ -3,9 +3,9 @@ import json
 import os
 import shutil
 import tempfile
-import numpy
-
 from collections import OrderedDict
+
+import numpy
 
 from django.core.files import File
 from django.core.urlresolvers import reverse

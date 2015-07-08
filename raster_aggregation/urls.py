@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from raster_aggregation.views import AggregationView
 
 # from rest_framework import routers
@@ -13,9 +13,9 @@ from raster_aggregation.views import AggregationView
 #     base_name='aggregationareaexport')
 
 
-urlpatterns = patterns('',
+urlpatterns = [
     # Url to request aggregate results
     url(r'^aggregate/(?P<area>[0-9]+)/$',
         AggregationView.as_view(),
         name='aggregate'),
-)
+]
