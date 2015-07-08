@@ -1,12 +1,82 @@
-"""Set of views for the aggregation app"""
+import json
+from collections import Counter
 
+import numpy
 from rest_framework import filters, viewsets
 from rest_framework.settings import api_settings
 from rest_framework_csv import renderers
 from rest_framework_gis.filters import InBBOXFilter
 
-from .models import AggregationArea
-from .serializers import AggregationAreaExportSerializer, AggregationAreaGeoSerializer
+from django.http import HttpResponse
+from django.views.generic import View
+from raster import tiler
+from raster.formulas import RasterAlgebraParser
+from raster.models import RasterTile
+from raster.rasterize import rasterize
+from raster_aggregation.models import AggregationArea
+from raster_aggregation.serializers import AggregationAreaExportSerializer, AggregationAreaGeoSerializer
+
+
+class AggregationView(View):
+
+    def __init__(self, *args, **kwargs):
+        super(AggregationView, self).__init__(*args, **kwargs)
+        self.parser = RasterAlgebraParser()
+
+    def get(self, request, *args, **kwargs):
+        # Get aggregation area
+        area_id = self.kwargs.get('area')
+        area = AggregationArea.objects.get(id=area_id)
+
+        # Compute tilerange for this area and the given zoom level
+        zoom = int(request.GET.get('zoom'))
+        tilerange = tiler.tile_index_range(area.geom.extent, zoom)
+
+        # Get layer ids
+        ids = request.GET.get('layers').split(',')
+
+        # Parse layer ids into dictionary with variable names
+        ids = {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
+
+        # Get formula from request
+        formula = request.GET.get('formula')
+
+        # Loop through tiles and evaluate raster algebra for each tile
+        results = Counter({})
+        for tilex in range(tilerange[0], tilerange[2] + 1):
+            for tiley in range(tilerange[1], tilerange[3] + 1):
+                # Prepare a data dictionary with named tiles for algebra evaluation
+                data = {}
+                for name, layerid in ids.items():
+                    tile = RasterTile.objects.filter(
+                        tilex=tilex,
+                        tiley=tiley,
+                        tilez=zoom,
+                        rasterlayer_id=layerid
+                    ).first()
+                    if tile:
+                        data[name] = tile.rast
+                    else:
+                        # Ignore this tile if any layer has no data for it
+                        break
+
+                if data != {}:
+                    # Evaluate algebra on tiles
+                    result = self.parser.evaluate_raster_algebra(data, formula)
+
+                    # Rasterize the aggregation area to the result raster
+                    rastgeom = rasterize(area.geom, result)
+
+                    # Compute unique counts constrained with the rasterized geom
+                    result = numpy.unique(result.bands[0].data()[rastgeom.bands[0].data() == 1], return_counts=True)
+
+                    # Add counts to results
+                    results += Counter(dict(zip(result[0], result[1])))
+
+        # Prepare data for json response
+        results = json.dumps({str(k): v for k, v in results.iteritems()})
+
+        return HttpResponse(results, content_type='application/json')
 
 
 class AggregationAreaGeoViewSet(viewsets.ModelViewSet):

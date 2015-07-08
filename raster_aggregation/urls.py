@@ -1,10 +1,21 @@
-from raster_aggregation.views import AggregationAreaExportViewSet, AggregationAreaGeoViewSet
-from rest_framework import routers
+from django.conf.urls import patterns, url
+from raster_aggregation.views import AggregationView
 
-router = routers.router()
+# from rest_framework import routers
+# from raster_aggregation.views import AggregationAreaExportViewSet, AggregationAreaGeoViewSet
 
-router.register(r'aggregationarea', AggregationAreaGeoViewSet,
-    base_name='aggregationarea')
+# router = routers.router()
 
-router.register(r'aggregationareaexport', AggregationAreaExportViewSet,
-    base_name='aggregationareaexport')
+# router.register(r'aggregationarea', AggregationAreaGeoViewSet,
+#     base_name='aggregationarea')
+
+# router.register(r'aggregationareaexport', AggregationAreaExportViewSet,
+#     base_name='aggregationareaexport')
+
+
+urlpatterns = patterns('',
+    # Url to request aggregate results
+    url(r'^aggregate/(?P<area>[0-9]+)/$',
+        AggregationView.as_view(),
+        name='aggregate'),
+)

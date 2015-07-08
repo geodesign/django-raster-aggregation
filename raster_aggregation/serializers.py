@@ -1,6 +1,7 @@
-from raster.models import RasterLayer, RasterLayerMetadata
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
+
+from raster.models import RasterLayer, RasterLayerMetadata
 
 from .models import AggregationArea
 
