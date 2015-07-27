@@ -92,9 +92,15 @@ class AggregationAreaViewSet(viewsets.ModelViewSet):
     """
     serializer_class = AggregationAreaSerializer
     allowed_methods = ('GET', )
+    filter_fields = ('aggregationlayer', )
 
     def get_queryset(self):
-        return AggregationArea.objects.all()
+        qs = AggregationArea.objects.all()
+        ids = self.request.query_params.get('ids')
+        if ids:
+            ids = ids.split(',')
+            return qs.filter(id__in=ids)
+        return qs
 
 
 class AggregationAreaGeoViewSet(viewsets.ModelViewSet):
