@@ -23,7 +23,8 @@ setup(
         'celery>=3.1.18',
         'djangorestframework>=3.1.3',
         'djangorestframework-csv>=1.3.3',
-        'djangorestframework-gis>=0.9'
+        'djangorestframework-gis>=0.9',
+        'django-filter>=0.10.0'
     ],
     keywords=['django', 'raster', 'gis', 'gdal', 'celery', 'geo', 'spatial'],
     classifiers=[
