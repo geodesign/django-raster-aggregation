@@ -15,7 +15,9 @@ from raster.formulas import RasterAlgebraParser
 from raster.models import RasterTile
 from raster.rasterize import rasterize
 from raster_aggregation.models import AggregationArea
-from raster_aggregation.serializers import AggregationAreaSerializer, AggregationAreaExportSerializer, AggregationAreaGeoSerializer
+from raster_aggregation.serializers import (
+    AggregationAreaExportSerializer, AggregationAreaGeoSerializer, AggregationAreaSerializer
+)
 
 
 class AggregationView(View):
@@ -79,6 +81,11 @@ class AggregationView(View):
 
                     # Add counts to results
                     results += Counter(dict(zip(result[0], result[1])))
+
+        # Transform pixel count to acres if requested
+        if 'acres' in request.GET:
+            acres_per_pixel = int(round(abs(rastgeom.scale.x * rastgeom.scale.y) * 0.000247105381))
+            results = {k: v * acres_per_pixel for k, v in results.iteritems()}
 
         # Prepare data for json response
         results = json.dumps({str(k): v for k, v in results.iteritems()})
