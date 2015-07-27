@@ -15,7 +15,7 @@ from raster.formulas import RasterAlgebraParser
 from raster.models import RasterTile
 from raster.rasterize import rasterize
 from raster_aggregation.models import AggregationArea
-from raster_aggregation.serializers import AggregationAreaExportSerializer, AggregationAreaGeoSerializer
+from raster_aggregation.serializers import AggregationAreaSerializer, AggregationAreaExportSerializer, AggregationAreaGeoSerializer
 
 
 class AggregationView(View):
@@ -25,6 +25,12 @@ class AggregationView(View):
         self.parser = RasterAlgebraParser()
 
     def get(self, request, *args, **kwargs):
+        """
+        Return value count for this aggregation area and an algebra expression.
+
+        Should currently only be used with categorical rasters, as it will look
+        for unique values.
+        """
         # Get aggregation area
         area_id = self.kwargs.get('area')
         area = get_object_or_404(AggregationArea, id=area_id)
@@ -63,7 +69,7 @@ class AggregationView(View):
 
                 if data != {}:
                     # Evaluate algebra on tiles
-                    result = self.parser.evaluate_raster_algebra(data, formula)
+                    result = self.parser.evaluate_raster_algebra(data, formula, mask=True)
 
                     # Rasterize the aggregation area to the result raster
                     rastgeom = rasterize(area.geom, result)
@@ -78,6 +84,17 @@ class AggregationView(View):
         results = json.dumps({str(k): v for k, v in results.iteritems()})
 
         return HttpResponse(results, content_type='application/json')
+
+
+class AggregationAreaViewSet(viewsets.ModelViewSet):
+    """
+    Regular aggregation Area model view endpoint.
+    """
+    serializer_class = AggregationAreaSerializer
+    allowed_methods = ('GET', )
+
+    def get_queryset(self):
+        return AggregationArea.objects.all()
 
 
 class AggregationAreaGeoViewSet(viewsets.ModelViewSet):

@@ -6,6 +6,20 @@ from raster.models import RasterLayer, RasterLayerMetadata
 from .models import AggregationArea
 
 
+class AggregationAreaSerializer(serializers.ModelSerializer):
+
+    geom = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AggregationArea
+        fields = ('id', 'name', 'geom', 'geom_simplified')
+
+    def get_geom(self, obj):
+        geom = obj.geom_simplified
+        geom.transform(4326)
+        return geom.coords
+
+
 class AggregationAreaGeoSerializer(GeoFeatureModelSerializer):
 
     valuecount = serializers.SerializerMethodField('get_value_count')
