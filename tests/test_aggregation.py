@@ -71,7 +71,7 @@ class RasterAggregationTests(TestCase):
         result = ValueCountResult.objects.get(aggregationarea__name='St Petersburg')
         self.assertEqual(
             json.loads(result.value),
-            {'0': 49949, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
+            {'--': 49949, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
         )
 
     def test_count_values_for_coverall(self):
@@ -87,7 +87,7 @@ class RasterAggregationTests(TestCase):
         # covered by the coverall geom.
         self.expected.pop("0")
         # Assert the nodata value is as expected
-        self.assertEqual(result.pop("0"), 111049)
+        self.assertEqual(result.pop("--"), 111049)
         # Assert value counts are correct
         self.assertEqual(result, self.expected)
 
@@ -95,7 +95,7 @@ class RasterAggregationTests(TestCase):
         area = AggregationArea.objects.get(name='St Petersburg')
         self.assertEqual(
             area.get_value_count(self.rasterlayer.id),
-            {'0': 49949, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
+            {'--': 49949, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
         )
 
     def test_aggregation_url(self):
@@ -115,7 +115,7 @@ class RasterAggregationTests(TestCase):
         result = OrderedDict(json.loads(response.content))
 
         # Pop the nodata value (this is the part that gets clipped by the coverall geom
-        result.pop('0')
+        result.pop('--')
         expected.pop('0')
 
         # Assert all data values are according to the formula
