@@ -4,6 +4,7 @@ import traceback
 from celery.contrib.methods import task
 
 from raster.models import RasterLayer
+from raster.valuecount import aggregator
 
 
 class Aggregator(object):
@@ -44,16 +45,22 @@ class Aggregator(object):
             else:
                 geom = area.geom
             try:
-                count = rast.value_count(geom, area=compute_area)
-                # Convert keys to string before dumping json
-                str_count = {}
-                for key, val in count.items():
-                    str_count[str(key)] = val
+                # Prepare data for aggregator
+                ids = {'a': rast.id}
+                formula = 'a'
+                zoom = rast._max_zoom
 
+                # Compute aggregates
+                count = aggregator(ids, zoom, geom, formula)
+
+                # Convert keys to string and dump to json
+                count = json.dumps({str(key): val for key, val in count.items()})
+
+                # Store result
                 ValueCountResult.objects.create(
                     rasterlayer=rast,
                     aggregationarea=area,
-                    value=json.dumps(str_count)
+                    value=count
                 )
             except:
                 self.log(

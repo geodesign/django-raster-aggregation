@@ -1,7 +1,5 @@
 import json
-from collections import Counter
 
-import numpy
 from rest_framework import filters, viewsets
 from rest_framework.settings import api_settings
 from rest_framework_csv import renderers
@@ -10,13 +8,13 @@ from rest_framework_gis.filters import InBBOXFilter
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import View
-from raster import tiler
 from raster.formulas import RasterAlgebraParser
-from raster.models import RasterTile
-from raster.rasterize import rasterize
-from raster_aggregation.models import AggregationArea
-from raster_aggregation.serializers import (
-    AggregationAreaExportSerializer, AggregationAreaGeoSerializer, AggregationAreaSerializer
+from raster.valuecount import aggregator
+
+from .models import AggregationArea
+from .serializers import (
+    AggregationAreaExportSerializer, AggregationAreaGeoSerializer, AggregationAreaSerializer,
+    AggregationAreaValueSerializer
 )
 
 
@@ -39,7 +37,6 @@ class AggregationView(View):
 
         # Compute tilerange for this area and the given zoom level
         zoom = int(request.GET.get('zoom'))
-        tilerange = tiler.tile_index_range(area.geom.extent, zoom)
 
         # Get layer ids
         ids = request.GET.get('layers').split(',')
@@ -50,45 +47,11 @@ class AggregationView(View):
         # Get formula from request
         formula = request.GET.get('formula')
 
-        # Loop through tiles and evaluate raster algebra for each tile
-        results = Counter({})
-        for tilex in range(tilerange[0], tilerange[2] + 1):
-            for tiley in range(tilerange[1], tilerange[3] + 1):
-                # Prepare a data dictionary with named tiles for algebra evaluation
-                data = {}
-                for name, layerid in ids.items():
-                    tile = RasterTile.objects.filter(
-                        tilex=tilex,
-                        tiley=tiley,
-                        tilez=zoom,
-                        rasterlayer_id=layerid
-                    ).first()
-                    if tile:
-                        data[name] = tile.rast
-                    else:
-                        # Ignore this tile if any layer has no data for it
-                        break
-
-                if data != {}:
-                    # Evaluate algebra on tiles
-                    result = self.parser.evaluate_raster_algebra(data, formula, mask=True)
-
-                    # Rasterize the aggregation area to the result raster
-                    rastgeom = rasterize(area.geom, result)
-
-                    # Compute unique counts constrained with the rasterized geom
-                    result = numpy.unique(result.bands[0].data()[rastgeom.bands[0].data() == 1], return_counts=True)
-
-                    # Add counts to results
-                    results += Counter(dict(zip(result[0], result[1])))
-
-        # Transform pixel count to acres if requested
-        if 'acres' in request.GET:
-            acres_per_pixel = int(round(abs(rastgeom.scale.x * rastgeom.scale.y) * 0.000247105381))
-            results = {k: v * acres_per_pixel for k, v in results.iteritems()}
+        # Compute aggregate results using aggregator
+        results = aggregator(ids, zoom, area.geom, formula)
 
         # Prepare data for json response
-        results = json.dumps({str(k): v for k, v in results.iteritems()})
+        results = json.dumps(results)
 
         return HttpResponse(results, content_type='application/json')
 
@@ -98,6 +61,23 @@ class AggregationAreaViewSet(viewsets.ModelViewSet):
     Regular aggregation Area model view endpoint.
     """
     serializer_class = AggregationAreaSerializer
+    allowed_methods = ('GET', )
+    filter_fields = ('aggregationlayer', )
+
+    def get_queryset(self):
+        qs = AggregationArea.objects.all()
+        ids = self.request.query_params.get('ids')
+        if ids:
+            ids = ids.split(',')
+            return qs.filter(id__in=ids)
+        return qs
+
+
+class AggregationAreaValueViewSet(viewsets.ModelViewSet):
+    """
+    Regular aggregation Area model view endpoint.
+    """
+    serializer_class = AggregationAreaValueSerializer
     allowed_methods = ('GET', )
     filter_fields = ('aggregationlayer', )
 
