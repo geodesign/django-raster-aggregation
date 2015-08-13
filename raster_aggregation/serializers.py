@@ -2,6 +2,7 @@ from collections import Counter
 
 import numpy
 from rest_framework import serializers
+from rest_framework.exceptions import APIException
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from raster import tiler
@@ -10,6 +11,11 @@ from raster.models import RasterLayer, RasterLayerMetadata, RasterTile
 from raster.rasterize import rasterize
 
 from .models import AggregationArea
+
+
+class MissingQueryParameter(APIException):
+    status_code = 500
+    default_detail = 'Missing Query Parameter.'
 
 
 class AggregationAreaSerializer(serializers.ModelSerializer):
@@ -56,9 +62,19 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         Should currently only be used with categorical rasters, as it will look
         for unique values.
         """
-        parser = RasterAlgebraParser()
-
+        # Get request object
         request = self.context['request']
+
+        # Look for required query parameters
+        if 'zoom' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: zoom')
+        elif 'formula' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: formula')
+        elif 'layers' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: layers')
+
+        # Instantiate raster algebra parser
+        parser = RasterAlgebraParser()
 
         # Compute tilerange for this area and the given zoom level
         zoom = int(request.GET.get('zoom'))
