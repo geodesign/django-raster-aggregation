@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
@@ -19,12 +21,11 @@ class AggregationAreaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AggregationArea
-        fields = ('id', 'name', 'geom', 'geom_simplified')
+        fields = ('id', 'name', 'geom')
 
     def get_geom(self, obj):
-        geom = obj.geom_simplified
-        geom.transform(4326)
-        return geom.coords
+        obj.geom_simplified.transform(4326)
+        return json.loads(obj.geom_simplified.geojson)
 
 
 class AggregationAreaGeoSerializer(GeoFeatureModelSerializer):
