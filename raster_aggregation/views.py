@@ -91,6 +91,32 @@ class AggregationAreaViewSet(viewsets.ModelViewSet):
             return qs.filter(id__in=ids)
         return qs
 
+    @cache_response(key_func='calculate_cache_key')
+    def list(self, request, *args, **kwargs):
+        """
+        List method wrapped with caching decorator.
+        """
+        return super(AggregationAreaViewSet, self).list(request, *args, **kwargs)
+
+    def calculate_cache_key(self, view_instance, view_method, request, *args, **kwargs):
+        """
+        Creates the cache key based on query parameters and change dates from
+        related objects.
+        """
+        # Add ids to cache key data
+        cache_key_data = [
+            request.GET.get('ids', '')
+        ]
+
+        # Add aggregationlayer id and modification date
+        agglayer_id = request.GET.get('aggregationlayer', '')
+        if agglayer_id:
+            modified = AggregationLayer.objects.get(id=agglayer_id).modified
+            modified = str(modified).replace(' ', '-')
+            cache_key_data.append('-'.join(['agg', agglayer_id, modified]))
+
+        return '|'.join(cache_key_data)
+
 
 class AggregationAreaValueViewSet(viewsets.ReadOnlyModelViewSet):
     """
