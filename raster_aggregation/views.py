@@ -120,10 +120,11 @@ class AggregationAreaValueViewSet(viewsets.ReadOnlyModelViewSet):
             return qs.filter(id__in=ids)
         return qs
 
-    @cache_response(60 * 15, key_func='calculate_cache_key')
+    @cache_response(key_func='calculate_cache_key')
     def list(self, request, *args, **kwargs):
         """
         List method wrapped with caching decorator.
+        Use the default timeout which is cache forever.
         """
         return super(AggregationAreaValueViewSet, self).list(request, *args, **kwargs)
 
