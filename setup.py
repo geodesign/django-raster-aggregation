@@ -19,12 +19,13 @@ setup(
     author_email='daniel@urbmet.com',
     install_requires=[
         'Django>=1.8',
-        'django-raster>=0.1.6',
         'celery>=3.1.18',
+        'django-raster>=0.1.6',
+        'django-filter>=0.10.0',
         'djangorestframework>=3.1.3',
         'djangorestframework-csv>=1.3.3',
         'djangorestframework-gis>=0.9',
-        'django-filter>=0.10.0'
+        'drf-extensions>=0.2.7'
     ],
     keywords=['django', 'raster', 'gis', 'gdal', 'celery', 'geo', 'spatial'],
     classifiers=[

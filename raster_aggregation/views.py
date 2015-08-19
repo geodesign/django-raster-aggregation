@@ -1,6 +1,7 @@
 import json
 
 from rest_framework import filters, viewsets
+from rest_framework.exceptions import APIException
 from rest_framework.settings import api_settings
 from rest_framework_csv import renderers
 from rest_framework_gis.filters import InBBOXFilter
@@ -9,13 +10,23 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import View
 from raster.formulas import RasterAlgebraParser
+from raster.models import RasterLayer
 from raster.valuecount import aggregator
 
-from .models import AggregationArea
+from .models import AggregationArea, AggregationLayer
 from .serializers import (
     AggregationAreaExportSerializer, AggregationAreaGeoSerializer, AggregationAreaSerializer,
     AggregationAreaValueSerializer
 )
+
+from rest_framework_extensions.cache.decorators import (
+    cache_response
+)
+
+
+class MissingQueryParameter(APIException):
+    status_code = 500
+    default_detail = 'Missing Query Parameter.'
 
 
 class AggregationView(View):
@@ -31,6 +42,14 @@ class AggregationView(View):
         Should currently only be used with categorical rasters, as it will look
         for unique values.
         """
+        # Look for required query parameters
+        if 'zoom' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: zoom')
+        elif 'formula' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: formula')
+        elif 'layers' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: layers')
+
         # Get aggregation area
         area_id = self.kwargs.get('area')
         area = get_object_or_404(AggregationArea, id=area_id)
@@ -73,13 +92,25 @@ class AggregationAreaViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class AggregationAreaValueViewSet(viewsets.ModelViewSet):
+class AggregationAreaValueViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Regular aggregation Area model view endpoint.
     """
     serializer_class = AggregationAreaValueSerializer
-    allowed_methods = ('GET', )
     filter_fields = ('aggregationlayer', )
+
+    def initial(self, request, *args, **kwargs):
+        """
+        Look for required request query parameters.
+        """
+        if 'zoom' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: zoom')
+        elif 'formula' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: formula')
+        elif 'layers' not in request.GET:
+            raise MissingQueryParameter(detail='Missing query parameter: layers')
+
+        return super(AggregationAreaValueViewSet, self).initial(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = AggregationArea.objects.all()
@@ -88,6 +119,45 @@ class AggregationAreaValueViewSet(viewsets.ModelViewSet):
             ids = ids.split(',')
             return qs.filter(id__in=ids)
         return qs
+
+    @cache_response(60 * 15, key_func='calculate_cache_key')
+    def list(self, request, *args, **kwargs):
+        """
+        List method wrapped with caching decorator.
+        """
+        return super(AggregationAreaValueViewSet, self).list(request, *args, **kwargs)
+
+    def calculate_cache_key(self, view_instance, view_method, request, *args, **kwargs):
+        """
+        Creates the cache key based on query parameters and change dates from
+        related objects.
+        """
+        # Add request parameters to cache key
+        cache_key_data = [
+            request.GET.get('formula', ''),
+            request.GET.get('layers', ''),
+            request.GET.get('zoom', ''),
+            str('True' == request.GET.get('acres', ''))
+        ]
+
+        # Add aggregationlayer id and modification date
+        agglayer_id = request.GET.get('aggregationlayer', '')
+        if agglayer_id:
+            modified = AggregationLayer.objects.get(id=agglayer_id).modified
+            modified = str(modified).replace(' ', '-')
+            cache_key_data.append('-'.join(['agg', agglayer_id, modified]))
+
+        # Construct layer ids array to get modification dates
+        ids = [idx.split('=')[1] for idx in request.GET.get('layers').split(',')]
+
+        # Get raster layer array
+        layers = RasterLayer.objects.filter(id__in=ids).values_list('id', 'modified')
+
+        # Add layer modification time stamps to cache key
+        for layer in layers:
+            cache_key_data.append('-'.join(['lyr', str(layer[0]), str(layer[1]).replace(' ', '-')]))
+
+        return '|'.join(cache_key_data)
 
 
 class AggregationAreaGeoViewSet(viewsets.ModelViewSet):

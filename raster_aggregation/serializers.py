@@ -1,18 +1,12 @@
 import json
 
 from rest_framework import serializers
-from rest_framework.exceptions import APIException
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from raster.models import RasterLayer, RasterLayerMetadata
 from raster.valuecount import aggregator
 
 from .models import AggregationArea
-
-
-class MissingQueryParameter(APIException):
-    status_code = 500
-    default_detail = 'Missing Query Parameter.'
 
 
 class AggregationAreaSerializer(serializers.ModelSerializer):
@@ -61,28 +55,20 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         # Get request object
         request = self.context['request']
 
-        # Look for required query parameters
-        if 'zoom' not in request.GET:
-            raise MissingQueryParameter(detail='Missing query parameter: zoom')
-        elif 'formula' not in request.GET:
-            raise MissingQueryParameter(detail='Missing query parameter: formula')
-        elif 'layers' not in request.GET:
-            raise MissingQueryParameter(detail='Missing query parameter: layers')
+        # Get formula
+        formula = request.GET.get('formula')
 
-        # Compute tilerange for this area and the given zoom level
+        # Get zoom level
         zoom = int(request.GET.get('zoom'))
 
         # Get boolean to return data in acres if requested
-        acres = 'acres' in request.GET
+        acres = 'true' == request.GET.get('acres', '').lower()
 
         # Get layer ids
         ids = request.GET.get('layers').split(',')
 
         # Parse layer ids into dictionary with variable names
         ids = {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
-
-        # Get formula from request
-        formula = request.GET.get('formula')
 
         return aggregator(ids, zoom, obj.geom, formula, acres)
 

@@ -20,6 +20,7 @@ class AggregationLayer(models.Model, AggregationDataParser, Aggregator):
     max_zoom_level = models.IntegerField(default=18)
     simplification_tolerance = models.FloatField(default=0.01)
     parse_log = models.TextField(blank=True, null=True, default='')
+    modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return '{name} ({count} divisions)'.format(
