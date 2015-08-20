@@ -1,5 +1,4 @@
-import json
-
+import numpy
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
@@ -9,7 +8,7 @@ from raster.valuecount import aggregator
 from .models import AggregationArea
 
 
-class AggregationAreaSerializer(serializers.ModelSerializer):
+class AggregationAreaSimplifiedSerializer(serializers.ModelSerializer):
 
     geom = serializers.SerializerMethodField()
 
@@ -18,8 +17,19 @@ class AggregationAreaSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'geom')
 
     def get_geom(self, obj):
+        # Transform geom to WGS84
         obj.geom_simplified.transform(4326)
-        return json.loads(obj.geom_simplified.geojson)
+
+        # Get coordinates and round to 4 digits
+        coords = obj.geom_simplified.coords
+        coords = [
+            [numpy.around(numpy.array(y), 4) for y in x] for x in coords
+        ]
+        # Return data as geojson
+        return {
+            'type': 'MultiPolygon',
+            'coordinates': coords
+        }
 
 
 class AggregationAreaGeoSerializer(GeoFeatureModelSerializer):

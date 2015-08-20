@@ -4,6 +4,7 @@ from rest_framework import filters, viewsets
 from rest_framework.exceptions import APIException
 from rest_framework.settings import api_settings
 from rest_framework_csv import renderers
+from rest_framework_extensions.cache.decorators import cache_response
 from rest_framework_gis.filters import InBBOXFilter
 
 from django.http import HttpResponse
@@ -15,12 +16,8 @@ from raster.valuecount import aggregator
 
 from .models import AggregationArea, AggregationLayer
 from .serializers import (
-    AggregationAreaExportSerializer, AggregationAreaGeoSerializer, AggregationAreaSerializer,
+    AggregationAreaExportSerializer, AggregationAreaGeoSerializer, AggregationAreaSimplifiedSerializer,
     AggregationAreaValueSerializer
-)
-
-from rest_framework_extensions.cache.decorators import (
-    cache_response
 )
 
 
@@ -75,20 +72,18 @@ class AggregationView(View):
         return HttpResponse(results, content_type='application/json')
 
 
-class AggregationAreaViewSet(viewsets.ModelViewSet):
+class AggregationAreaViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Regular aggregation Area model view endpoint.
     """
-    serializer_class = AggregationAreaSerializer
-    allowed_methods = ('GET', )
+    serializer_class = AggregationAreaSimplifiedSerializer
     filter_fields = ('aggregationlayer', )
 
     def get_queryset(self):
         qs = AggregationArea.objects.all()
         ids = self.request.query_params.get('ids')
         if ids:
-            ids = ids.split(',')
-            return qs.filter(id__in=ids)
+            qs = qs.filter(id__in=ids.split(','))
         return qs
 
     @cache_response(key_func='calculate_cache_key')
