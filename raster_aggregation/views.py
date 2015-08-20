@@ -9,6 +9,7 @@ from rest_framework_gis.filters import InBBOXFilter
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils.http import urlquote
 from django.views.generic import View
 from raster.formulas import RasterAlgebraParser
 from raster.models import RasterLayer
@@ -156,7 +157,7 @@ class AggregationAreaValueViewSet(viewsets.ReadOnlyModelViewSet):
         """
         # Add request parameters to cache key
         cache_key_data = [
-            request.GET.get('formula', ''),
+            urlquote(request.GET.get('formula', '')),
             request.GET.get('layers', ''),
             request.GET.get('zoom', ''),
             str('True' == request.GET.get('acres', ''))
