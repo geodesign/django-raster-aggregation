@@ -18,7 +18,7 @@ from raster.valuecount import aggregator
 from .models import AggregationArea, AggregationLayer
 from .serializers import (
     AggregationAreaExportSerializer, AggregationAreaGeoSerializer, AggregationAreaSimplifiedSerializer,
-    AggregationAreaValueSerializer
+    AggregationAreaValueSerializer, AggregationLayerSerializer
 )
 
 
@@ -203,13 +203,20 @@ class AggregationAreaGeoViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class AggregationAreaExportViewSet(viewsets.ModelViewSet):
+class AggregationAreaExportViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that returns Aggregation Area geometries in GeoJSON format.
     """
     queryset = AggregationArea.objects.all()
     serializer_class = AggregationAreaExportSerializer
-    allowed_methods = ('GET', )
     filter_fields = ('name', 'aggregationlayer', )
     paginate_by = None
     renderer_classes = [renderers.CSVRenderer] + api_settings.DEFAULT_RENDERER_CLASSES
+
+
+class AggregationLayerViewSet(viewsets.ReadOnlyModelViewSet):
+
+    serializer_class = AggregationLayerSerializer
+
+    def get_queryset(self):
+        return AggregationLayer.objects.all()

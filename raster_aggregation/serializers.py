@@ -5,7 +5,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from raster.models import RasterLayer, RasterLayerMetadata
 from raster.valuecount import aggregator
 
-from .models import AggregationArea
+from .models import AggregationArea, AggregationLayer
 
 
 class AggregationAreaSimplifiedSerializer(serializers.ModelSerializer):
@@ -124,3 +124,15 @@ class AggregationAreaExportSerializer(serializers.ModelSerializer):
     def get_rasterlayer_name(self, obj):
         rasterlayer_id = self.context['request'].QUERY_PARAMS.get('rasterlayer_id', None)
         return RasterLayer.objects.get(id=rasterlayer_id).name
+
+
+class AggregationLayerSerializer(serializers.ModelSerializer):
+
+    nr_of_areas = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AggregationLayer
+        fields = ('id', 'name', 'description', 'min_zoom_level', 'max_zoom_level', 'nr_of_areas')
+
+    def get_nr_of_areas(self, obj):
+        return obj.aggregationarea_set.count()
