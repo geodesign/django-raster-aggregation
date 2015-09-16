@@ -5,6 +5,7 @@ from django.shortcuts import render
 from raster.models import RasterLayer
 
 from .models import AggregationArea, AggregationLayer, ValueCountResult
+from .tasks import compute_value_count
 
 
 class ValueCountResultAdmin(admin.ModelAdmin):
@@ -49,7 +50,7 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
                 rasterlayers = form.cleaned_data['rasterlayers']
                 simplified = form.cleaned_data['simplified']
                 for rst in rasterlayers:
-                    layer.compute_value_count.delay(rst.id, simplified=simplified, compute_area=True)
+                    compute_value_count.delay(layer, rst.id, simplified=simplified, compute_area=True)
                 self.message_user(
                     request,
                     "Started Value Count on \"{agg}\" with {count} rasters. "

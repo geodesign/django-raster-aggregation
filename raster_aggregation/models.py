@@ -1,14 +1,17 @@
 import datetime
-import json
 
 from django.contrib.gis.db import models
+from django.contrib.postgres.fields import HStoreField
+from django.dispatch import receiver
 from raster.models import RasterLayer
-from raster_aggregation.aggregator import Aggregator
-from raster_aggregation.parser import AggregationDataParser
-from raster_aggregation.utils import WEB_MERCATOR_SRID, convert_to_multipolygon
+from raster.valuecount import aggregator
+from raster.parser import rasterlayers_parser_started
+
+from .parser import AggregationDataParser
+from .utils import WEB_MERCATOR_SRID, convert_to_multipolygon
 
 
-class AggregationLayer(models.Model, AggregationDataParser, Aggregator):
+class AggregationLayer(models.Model, AggregationDataParser):
     """
     Source data for aggregation layers and meta information.
     """
@@ -58,34 +61,63 @@ class AggregationArea(models.Model):
         return "{lyr} - {name}".format(lyr=self.aggregationlayer.name, name=self.name)
 
     def save(self, *args, **kwargs):
-        # Reduce the geometries to simplified version
-        geom = self.geom
-        tol = self.aggregationlayer.simplification_tolerance
-        geom = geom.simplify(tolerance=tol, preserve_topology=True)
+        """
+        Reduce the geometries to simplified version.
+        """
+        geom = self.geom.simplify(
+            tolerance=self.aggregationlayer.simplification_tolerance,
+            preserve_topology=True
+        )
         geom = convert_to_multipolygon(geom)
         self.geom_simplified = geom
         super(AggregationArea, self).save(*args, **kwargs)
 
-    def get_value_count(self, rasterlayer_id):
-        data = {}
-        if rasterlayer_id:
-            result = self.valuecountresult_set.filter(
-                rasterlayer_id=rasterlayer_id
-            )
-
-            if result.exists():
-                data = json.loads(result[0].value)
-
-        return data
-
 
 class ValueCountResult(models.Model):
     """
-    A class to store precomputed value counts from raster layers.
+    A class to store precomputed aggregation values from raster layers.
     """
-    rasterlayer = models.ForeignKey(RasterLayer)
     aggregationarea = models.ForeignKey(AggregationArea)
-    value = models.TextField()
+    rasterlayers = models.ManyToManyField(RasterLayer)
+    formula = models.TextField()
+    layer_names = HStoreField()
+    zoom = models.PositiveSmallIntegerField()
+    units = models.TextField(default='')
+    value = HStoreField()
 
     def __str__(self):
         return "{id} - {area}".format(id=self.id, area=self.aggregationarea.name)
+
+    def save(self, *args, **kwargs):
+        """
+        Compute value count on save using the objects value count parameters.
+        """
+        # Compute aggregate result
+        aggregation_result = aggregator(
+            self.layer_names,
+            self.zoom,
+            self.aggregationarea.geom,
+            self.formula,
+            self.units.lower() == 'acres'
+        )
+
+        # Convert values to string for storage in hstore
+        self.value = {k: str(v) for k, v in aggregation_result.items()}
+
+        # Save value count result data
+        super(ValueCountResult, self).save(*args, **kwargs)
+
+        # Add raster layers for tracking change and subsequent invalidation
+        # of value count results. The post save signal will remove all outdated
+        # value count results on change of raster layers.
+        for layer_id in self.layer_names.values():
+            lyr = RasterLayer.objects.get(id=layer_id)
+            self.rasterlayers.add(lyr)
+
+
+@receiver(rasterlayers_parser_started, sender=RasterLayer)
+def remove_aggregation_results_after_rasterlayer_change(sender, instance, **kwargs):
+    """
+    Delete ValueCountResults that depend on the rasterlayer that was changed.
+    """
+    ValueCountResult.objects.filter(rasterlayers=instance).delete()

@@ -1,9 +1,15 @@
-from django.conf.urls import url
-from raster_aggregation.views import AggregationView
+from rest_framework import routers
+
+from django.conf.urls import include, url
+
+from .views import AggregationAreaValueViewSet
+
+router = routers.DefaultRouter()
+
+router.register(r'aggregationareavalue', AggregationAreaValueViewSet, base_name='aggregationareavalue')
 
 urlpatterns = [
-    # Url to request aggregate results
-    url(r'^aggregate/(?P<area>[0-9]+)/$',
-        AggregationView.as_view(),
-        name='aggregate'),
+
+    url(r'api/', include(router.urls)),
+
 ]

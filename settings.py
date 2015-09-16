@@ -6,6 +6,7 @@ import os
 SECRET_KEY = 'testkey'
 
 INSTALLED_APPS = (
+    'django.contrib.postgres',
     'raster',
     'raster_aggregation',
 )
