@@ -4,10 +4,10 @@ from raster_aggregation.tasks import compute_value_count
 from .aggregation_testcase import RasterAggregationTestCase
 
 
-class RasterAggregationTests(RasterAggregationTestCase):
+class RasterAggregationInvalidationTests(RasterAggregationTestCase):
 
     def setUp(self):
-        super(RasterAggregationTests, self).setUp()
+        super(RasterAggregationInvalidationTests, self).setUp()
 
         compute_value_count(self.agglayer, self.rasterlayer.id, compute_area=False)
 
