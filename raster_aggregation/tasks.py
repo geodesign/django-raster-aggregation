@@ -8,7 +8,7 @@ from .models import ValueCountResult
 
 
 @shared_task()
-def compute_value_count(obj, layer_id, compute_area=True):
+def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True):
     """
     Precomputes value counts for a given aggregation area and a rasterlayer.
     """
@@ -57,4 +57,18 @@ def compute_value_count(obj, layer_id, compute_area=True):
     obj.log(
         'Ended Value count for AggregationLayer {agg} '
         'on RasterLayer {rst}'.format(agg=obj.id, rst=rast.id)
+    )
+
+
+@shared_task()
+def compute_single_value_count_result(area, formula, layer_names, zoom, units):
+    """
+    Precomputes value counts for a given input set.
+    """
+    ValueCountResult.objects.get_or_create(
+        aggregationarea=area,
+        formula=formula,
+        layer_names=layer_names,
+        zoom=zoom,
+        units=units
     )

@@ -1,5 +1,4 @@
 import json
-from collections import OrderedDict
 
 from django.core.urlresolvers import reverse
 from django.test import Client
@@ -30,15 +29,16 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(response.status_code, 200)
 
         # Compute the expected result (squaring the value of each pixel)
-        expected = OrderedDict({str(int(k) ** 2): str(v) for k, v in self.expected.items()})
-        expected_acres = OrderedDict({str(int(k) ** 2): str(v * 1.4437426664517252) for k, v in self.expected.items()})
+        expected = {str(int(k) ** 2): v for k, v in self.expected.items()}
+        expected_acres = {str(int(k) ** 2): round(v * 1.4437426664517252) for k, v in self.expected.items()}
 
         # Assert result has the right aggregationarea id
         self.assertEqual(json.loads(response.content)['id'], area.id)
 
         # Load results into ordered dict
-        result = OrderedDict(json.loads(response.content)['value'])
-        result_acres = OrderedDict(json.loads(response_acres.content)['value'])
+        result = json.loads(response.content)['value']
+        result_acres = json.loads(response_acres.content)['value']
+        result_acres = {k: round(float(v)) for k, v in result_acres.items()}
 
         # Pop the nodata value (this is the part that gets clipped by the coverall geom
         result.pop('--')
@@ -48,8 +48,8 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         expected_acres.pop('0')
 
         # Assert all data values are according to the formula
-        self.assertEqual(result, expected)
-        self.assertEqual(result_acres, expected_acres)
+        self.assertDictEqual(result, expected)
+        self.assertDictEqual(result_acres, expected_acres)
 
         # Assert value count result was created
         self.assertTrue(ValueCountResult.objects.filter(aggregationarea=area).exists())

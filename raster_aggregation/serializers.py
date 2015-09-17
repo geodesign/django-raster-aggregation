@@ -54,7 +54,7 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
 
     def get_value(self, obj):
         """
-        Return value count for this aggregation area and an algebra expression.
+        Get or create value count for this aggregation area.
 
         Should currently only be used with categorical rasters, as it will look
         for unique values.
@@ -77,6 +77,7 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         # Parse layer ids into dictionary with variable names
         ids = {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
 
+        # Get or create impact value result
         result, created = ValueCountResult.objects.get_or_create(
             aggregationarea=obj,
             formula=formula,
@@ -85,7 +86,10 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
             units=acres
         )
 
-        return result.value
+        # Convert hstore values to floats
+        result = {k: float(v) for k, v in result.value.items()}
+
+        return result
 
 
 class AggregationLayerSerializer(serializers.ModelSerializer):
