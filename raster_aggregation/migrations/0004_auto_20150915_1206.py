@@ -13,10 +13,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveField(
             model_name='valuecountresult',
-            name='aggregationarea',
-        ),
-        migrations.RemoveField(
-            model_name='valuecountresult',
             name='rasterlayer',
         ),
         migrations.RemoveField(
