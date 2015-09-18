@@ -31,17 +31,10 @@ class AggregationAreaSimplifiedSerializer(serializers.ModelSerializer):
 
 class AggregationAreaGeoSerializer(GeoFeatureModelSerializer):
 
-    valuecount = serializers.SerializerMethodField('get_value_count')
-
     class Meta:
         model = AggregationArea
         geo_field = 'geom_simplified'
-        fields = ('id', 'name', 'aggregationlayer', 'valuecount')
-
-    def get_value_count(self, obj):
-        rasterlayer_id = self.context['request'].QUERY_PARAMS.get(
-            'rasterlayer_id', None)
-        return obj.get_value_count(rasterlayer_id)
+        fields = ('id', 'name', 'aggregationlayer')
 
 
 class AggregationAreaValueSerializer(serializers.ModelSerializer):
