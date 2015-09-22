@@ -85,6 +85,11 @@ class ValueCountResult(models.Model):
     units = models.TextField(default='')
     value = HStoreField()
 
+    class Meta:
+        unique_together = (
+            'aggregationarea', 'formula', 'layer_names', 'zoom', 'units'
+        )
+
     def __str__(self):
         return "{id} - {area}".format(id=self.id, area=self.aggregationarea.name)
 
