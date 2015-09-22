@@ -32,7 +32,6 @@ class RasterAggregationTestCase(TestCase):
                 name='Raster data',
                 description='Small raster for testing',
                 datatype='ca',
-                srid='3086',
                 nodata='0',
                 rasterfile=rasterfile
             )
