@@ -4,8 +4,8 @@ from django.contrib.gis.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.dispatch import receiver
 from raster.models import RasterLayer
-from raster.valuecount import aggregator
 from raster.parser import rasterlayers_parser_ended
+from raster.valuecount import aggregator
 
 from .parser import AggregationDataParser
 from .utils import WEB_MERCATOR_SRID, convert_to_multipolygon
