@@ -19,7 +19,7 @@ class RasterAggregationTaskTests(RasterAggregationTestCase):
         result = {k: float(v) for k, v in result.value.items()}
         self.assertEqual(
             result,
-            {'--': 49949, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
+            {'--': 222402, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
         )
 
     def test_count_values_for_coverall(self):
@@ -27,15 +27,8 @@ class RasterAggregationTaskTests(RasterAggregationTestCase):
         result = ValueCountResult.objects.get(aggregationarea__name='Coverall')
         result = {k: float(v) for k, v in result.value.items()}
 
-        # Assert totals are correct
-        self.assertEqual(
-            sum(result.values()),
-            sum(self.expected.values()) + (111049 - self.expected["0"])
-        )
-        # Remove nodata value - the tiles are not entirely
-        # covered by the coverall geom.
-        self.expected.pop("0")
         # Assert the nodata value is as expected
-        self.assertEqual(result.pop("--"), 111049)
+        self.assertEqual(result.pop("--"), self.expected.pop("0"))
+
         # Assert value counts are correct
-        self.assertEqual(result, self.expected)
+        self.assertDictEqual(result, self.expected)

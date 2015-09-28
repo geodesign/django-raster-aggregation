@@ -21,7 +21,6 @@ class SelectLayerActionForm(forms.Form):
     """
     _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
     rasterlayers = forms.ModelMultipleChoiceField(queryset=RasterLayer.objects.all(), required=True)
-    simplified = forms.BooleanField(label='Use simplified geometries', required=True)
 
 
 class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
@@ -52,13 +51,11 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
 
             if form.is_valid():
                 rasterlayers = form.cleaned_data['rasterlayers']
-                simplified = form.cleaned_data['simplified']
 
                 for rst in rasterlayers:
                     compute_value_count_for_aggregation_layer.delay(
                         layer,
                         rst.id,
-                        simplified=simplified,
                         compute_area=True
                     )
 
@@ -73,7 +70,6 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
         if not form:
             form = SelectLayerActionForm(initial={
                 '_selected_action': request.POST.getlist(admin.ACTION_CHECKBOX_NAME),
-                'simplified': True
             })
 
         return render(

@@ -40,7 +40,7 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True):
 
         try:
             # Store result, this automatically creates value on save
-            ValueCountResult.objects.create(
+            ValueCountResult.objects.get_or_create(
                 aggregationarea=area,
                 formula=formula,
                 layer_names=ids,

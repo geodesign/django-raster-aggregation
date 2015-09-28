@@ -5,7 +5,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.dispatch import receiver
 from raster.models import RasterLayer
 from raster.valuecount import aggregator
-from raster.parser import rasterlayers_parser_started
+from raster.parser import rasterlayers_parser_ended
 
 from .parser import AggregationDataParser
 from .utils import WEB_MERCATOR_SRID, convert_to_multipolygon
@@ -113,14 +113,15 @@ class ValueCountResult(models.Model):
         super(ValueCountResult, self).save(*args, **kwargs)
 
         # Add raster layers for tracking change and subsequent invalidation
-        # of value count results. The post save signal will remove all outdated
-        # value count results on change of raster layers.
+        # of value count results. The rasterlayer praser start signal will use
+        # this information to remove all outdated value count results on
+        # reparse of raster layers.
         for layer_id in self.layer_names.values():
             lyr = RasterLayer.objects.get(id=layer_id)
             self.rasterlayers.add(lyr)
 
 
-@receiver(rasterlayers_parser_started, sender=RasterLayer)
+@receiver(rasterlayers_parser_ended, sender=RasterLayer)
 def remove_aggregation_results_after_rasterlayer_change(sender, instance, **kwargs):
     """
     Delete ValueCountResults that depend on the rasterlayer that was changed.
