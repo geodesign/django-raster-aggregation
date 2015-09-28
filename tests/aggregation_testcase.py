@@ -35,8 +35,15 @@ class RasterAggregationTestCase(TestCase):
                 nodata='0',
                 rasterfile=rasterfile
             )
+            self.empty_rasterlayer = RasterLayer.objects.create(
+                name='Raster data',
+                description='Small raster for testing',
+                datatype='ca',
+                nodata='0',
+                rasterfile=rasterfile
+            )
+            self.empty_rasterlayer.rastertile_set.all().delete()
 
-            self.rasterlayer.save()
             # Create aggregation layer
             self.agglayer = AggregationLayer.objects.create(
                 name='abc',

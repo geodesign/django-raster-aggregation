@@ -2,7 +2,6 @@ import json
 
 from django.core.urlresolvers import reverse
 from django.test import Client
-from raster.models import RasterLayer
 from raster_aggregation.models import AggregationArea, ValueCountResult
 
 from .aggregation_testcase import RasterAggregationTestCase
@@ -59,14 +58,11 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Instantiate test client
         self.client = Client()
 
-        # Create empty raster layer without tiles
-        empty_layer = RasterLayer.objects.create()
-
         # Get api url for the given aggregation area
         url = reverse('aggregationareavalue-list')
 
         # Setup request with fromula that will multiply the rasterlayer by itself
-        response = self.client.get(url + '?layers=a={0},b={1}&formula=a*b&zoom=4'.format(self.rasterlayer.id, empty_layer.id))
+        response = self.client.get(url + '?layers=a={0},b={1}&formula=a*b&zoom=4'.format(self.rasterlayer.id, self.empty_rasterlayer.id))
 
         # Parse result values
         result = [dat['value'] for dat in json.loads(response.content)]
