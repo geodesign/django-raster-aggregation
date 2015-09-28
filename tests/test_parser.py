@@ -1,40 +1,7 @@
-import inspect
-import os
-import shutil
-import tempfile
-
-from django.core.files import File
-from django.test import TestCase
-from raster_aggregation.models import AggregationLayer
+from .aggregation_testcase import RasterAggregationTestCase
 
 
-class AggregationAreaParseTests(TestCase):
-
-    def setUp(self):
-        # Instantiate Django file instances with nodes and links
-        self.pwd = os.path.dirname(
-            os.path.abspath(
-                inspect.getfile(inspect.currentframe())
-            )
-        )
-
-        shapefile = File(open(os.path.join(self.pwd, 'data/shapefile.zip')))
-
-        self.media_root = tempfile.mkdtemp()
-
-        with self.settings(MEDIA_ROOT=self.media_root):
-
-            # Create aggregation layer
-            self.agglayer = AggregationLayer.objects.create(
-                name='abc',
-                name_column='name',
-                shapefile=shapefile
-            )
-            # Parse aggregation layer
-            self.agglayer.parse()
-
-    def tearDown(self):
-        shutil.rmtree(self.media_root)
+class AggregationAreaParseTests(RasterAggregationTestCase):
 
     def test_nr_of_aggregation_areas_created(self):
         self.assertEqual(self.agglayer.aggregationarea_set.count(), 2)
