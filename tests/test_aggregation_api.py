@@ -9,7 +9,10 @@ from .aggregation_testcase import RasterAggregationTestCase
 
 class RasterAggregationApiTests(RasterAggregationTestCase):
 
-    def prepare(self):
+    def setUp(self):
+        # Run parent setup
+        super(RasterAggregationApiTests, self).setUp()
+
         # Get aggregation area to compute aggregation
         self.area = AggregationArea.objects.get(name='Coverall')
 
@@ -23,8 +26,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.url = reverse('aggregationareavalue-detail', kwargs={'pk': self.area.id})
 
     def test_aggregation_api_count(self):
-        self.prepare()
-
         # Setup request with fromula that will multiply the rasterlayer by itself
         response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&zoom=11'.format(self.rasterlayer.id))
         self.assertEqual(response.status_code, 200)
@@ -49,8 +50,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
 
     def test_aggregation_api_areas(self):
-        self.prepare()
-
         # Request result
         response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&acres'.format(self.rasterlayer.id))
         self.assertEqual(response.status_code, 200)
@@ -76,8 +75,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
 
     def test_aggregation_api_legend_expression_grouping(self):
-        self.prepare()
-
         # Request result
         response = self.client.get(
             self.url + '?layers=a={0}&formula=a&grouping={1}'
@@ -101,8 +98,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
 
     def test_aggregation_api_legend_float_grouping(self):
-        self.prepare()
-
         # Request result
         response = self.client.get(
             self.url + '?layers=a={0}&formula=a&grouping={1}'
@@ -126,10 +121,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
 
     def test_value_count_for_raster_with_missing_tile(self):
-        # Instantiate test client
-        self.client = Client()
-
-        # Get api url for the given aggregation area
         url = reverse('aggregationareavalue-list')
 
         # Setup request with fromula that will multiply the rasterlayer by itself
