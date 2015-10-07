@@ -67,9 +67,7 @@ class AggregationAreaValueViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Look for required request query parameters.
         """
-        if 'zoom' not in request.GET:
-            raise MissingQueryParameter(detail='Missing query parameter: zoom')
-        elif 'formula' not in request.GET:
+        if 'formula' not in request.GET:
             raise MissingQueryParameter(detail='Missing query parameter: formula')
         elif 'layers' not in request.GET:
             raise MissingQueryParameter(detail='Missing query parameter: layers')

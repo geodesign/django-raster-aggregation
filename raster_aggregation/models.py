@@ -81,8 +81,9 @@ class ValueCountResult(models.Model):
     rasterlayers = models.ManyToManyField(RasterLayer)
     formula = models.TextField()
     layer_names = HStoreField()
-    zoom = models.PositiveSmallIntegerField()
+    zoom = models.PositiveSmallIntegerField(null=True, blank=True)
     units = models.TextField(default='')
+    grouping = models.TextField(default='auto')
     value = HStoreField()
 
     class Meta:
@@ -103,7 +104,8 @@ class ValueCountResult(models.Model):
             self.zoom,
             self.aggregationarea.geom,
             self.formula,
-            self.units.lower() == 'acres'
+            self.units.lower() == 'acres',
+            self.grouping
         )
 
         # Convert values to string for storage in hstore

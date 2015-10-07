@@ -7,7 +7,7 @@ import numpy
 
 from django.core.files import File
 from django.test import TestCase
-from raster.models import RasterLayer
+from raster.models import Legend, LegendEntry, LegendSemantics, RasterLayer
 from raster_aggregation.models import AggregationLayer
 
 
@@ -52,6 +52,20 @@ class RasterAggregationTestCase(TestCase):
             )
             # Parse aggregation layer
             self.agglayer.parse()
+
+        # Create legend objects
+        sem1 = LegendSemantics.objects.create(name='Earth')
+        sem2 = LegendSemantics.objects.create(name='Wind')
+        sem3 = LegendSemantics.objects.create(name='Fire')
+        # Create legend entries (semantics with colors and expressions)
+        ent1 = LegendEntry.objects.create(semantics=sem1, expression='4', color='#123456')
+        ent2 = LegendEntry.objects.create(semantics=sem2, expression='2', color='#654321')
+        ent3 = LegendEntry.objects.create(semantics=sem3, expression='(x >= 2) & (x < 5)', color='#123456')
+        # Create legends
+        self.legend_float = Legend.objects.create(title='Float key legend')
+        self.legend_float.entries.add(ent1, ent2)
+        self.legend_exp = Legend.objects.create(title='Expression key legend')
+        self.legend_exp.entries.add(ent3)
 
         # Compute expected totals from numpy value count
         self.expected = {}

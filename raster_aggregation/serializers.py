@@ -59,10 +59,16 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         formula = request.GET.get('formula')
 
         # Get zoom level
-        zoom = int(request.GET.get('zoom'))
+        if request.GET.has_key('zoom'):
+            zoom = int(request.GET.get('zoom'))
+        else:
+            zoom = None
 
         # Get boolean to return data in acres if requested
         acres = 'acres' if request.GET.has_key('acres') else ''
+
+        # Get grouping parameter
+        grouping = request.GET.get('grouping', 'auto')
 
         # Get layer ids
         ids = request.GET.get('layers').split(',')
@@ -76,7 +82,8 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
             formula=formula,
             layer_names=ids,
             zoom=zoom,
-            units=acres
+            units=acres,
+            grouping=grouping
         )
 
         # Convert hstore values to floats
