@@ -81,14 +81,14 @@ class ValueCountResult(models.Model):
     rasterlayers = models.ManyToManyField(RasterLayer)
     formula = models.TextField()
     layer_names = HStoreField()
-    zoom = models.PositiveSmallIntegerField(null=True, blank=True)
+    zoom = models.PositiveSmallIntegerField()
     units = models.TextField(default='')
     grouping = models.TextField(default='auto')
     value = HStoreField()
 
     class Meta:
         unique_together = (
-            'aggregationarea', 'formula', 'layer_names', 'zoom', 'units'
+            'aggregationarea', 'formula', 'layer_names', 'zoom', 'units', 'grouping',
         )
 
     def __str__(self):

@@ -2,6 +2,8 @@ import numpy
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
+from raster.models import RasterLayer
+
 from .models import AggregationArea, AggregationLayer, ValueCountResult
 
 
@@ -55,6 +57,12 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         # Get request object
         request = self.context['request']
 
+        # Get layer ids
+        ids = request.GET.get('layers').split(',')
+
+        # Parse layer ids into dictionary with variable names
+        ids = {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
+
         # Get formula
         formula = request.GET.get('formula')
 
@@ -62,19 +70,17 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         if request.GET.has_key('zoom'):
             zoom = int(request.GET.get('zoom'))
         else:
-            zoom = None
+            # Compute zoom if not provided
+            zoom = min(
+                RasterLayer.objects.filter(id__in=ids.values())
+                .values_list('metadata__max_zoom', flat=True)
+            )
 
         # Get boolean to return data in acres if requested
         acres = 'acres' if request.GET.has_key('acres') else ''
 
         # Get grouping parameter
         grouping = request.GET.get('grouping', 'auto')
-
-        # Get layer ids
-        ids = request.GET.get('layers').split(',')
-
-        # Parse layer ids into dictionary with variable names
-        ids = {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
 
         # Get or create impact value result
         result, created = ValueCountResult.objects.get_or_create(
