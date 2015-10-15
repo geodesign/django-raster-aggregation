@@ -65,10 +65,24 @@ def compute_single_value_count_result(area, formula, layer_names, zoom, units):
     """
     Precomputes value counts for a given input set.
     """
+    # Compute zoom if not provided
+    if zoom is None:
+        # Get layer ids
+        ids = layer_names.split(',')
+
+        # Parse layer ids into dictionary with variable names
+        ids = {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
+
+        # Compute zoom level
+        zoom = min(
+            RasterLayer.objects.filter(id__in=ids.values())
+            .values_list('metadata__max_zoom', flat=True)
+        )
+
     ValueCountResult.objects.get_or_create(
         aggregationarea=area,
         formula=formula,
-        layer_names=layer_names,
+        layer_names=ids,
         zoom=zoom,
         units=units
     )
