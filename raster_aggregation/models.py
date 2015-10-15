@@ -85,6 +85,7 @@ class ValueCountResult(models.Model):
     units = models.TextField(default='')
     grouping = models.TextField(default='auto')
     value = HStoreField()
+    created = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = (
