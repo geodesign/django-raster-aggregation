@@ -61,7 +61,7 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True):
 
 
 @shared_task()
-def compute_single_value_count_result(area, formula, layer_names, zoom, units):
+def compute_single_value_count_result(area, formula, layer_names, zoom, units, grouping='auto'):
     """
     Precomputes value counts for a given input set.
     """
@@ -84,5 +84,6 @@ def compute_single_value_count_result(area, formula, layer_names, zoom, units):
         formula=formula,
         layer_names=ids,
         zoom=zoom,
-        units=units
+        units=units,
+        grouping=grouping
     )

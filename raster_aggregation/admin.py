@@ -11,7 +11,7 @@ from .tasks import compute_value_count_for_aggregation_layer
 class ValueCountResultAdmin(admin.ModelAdmin):
     readonly_fields = (
         'aggregationarea', 'rasterlayers', 'formula',
-        'layer_names', 'zoom', 'units', 'value'
+        'layer_names', 'zoom', 'units', 'value', 'created'
     )
 
 
