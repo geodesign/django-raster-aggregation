@@ -8,7 +8,7 @@ from .models import ValueCountResult
 
 
 @shared_task()
-def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True):
+def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True, grouping='auto'):
     """
     Precomputes value counts for a given aggregation area and a rasterlayer.
     """
@@ -45,7 +45,8 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True):
                 formula=formula,
                 layer_names=ids,
                 zoom=zoom,
-                units='acres' if compute_area else ''
+                units='acres' if compute_area else '',
+                grouping=grouping
             )
         except:
             obj.log(

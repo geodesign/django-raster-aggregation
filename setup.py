@@ -23,7 +23,6 @@ setup(
         'django-raster>=0.1.6',
         'django-filter>=0.10.0',
         'djangorestframework>=3.1.3',
-        'djangorestframework-csv>=1.3.3',
         'djangorestframework-gis>=0.9',
         'drf-extensions>=0.2.7'
     ],

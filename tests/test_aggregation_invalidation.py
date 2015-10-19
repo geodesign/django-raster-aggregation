@@ -9,7 +9,7 @@ class RasterAggregationInvalidationTests(RasterAggregationTestCase):
     def setUp(self):
         super(RasterAggregationInvalidationTests, self).setUp()
 
-        compute_value_count_for_aggregation_layer(self.agglayer, self.rasterlayer.id, compute_area=False)
+        compute_value_count_for_aggregation_layer(self.agglayer, self.rasterlayer.id, compute_area=False, grouping=self.legend_exp.id)
 
     def test_invalidation_from_reparsing_agglayer(self):
         self.assertEqual(ValueCountResult.objects.all().count(), 2)
@@ -24,4 +24,9 @@ class RasterAggregationInvalidationTests(RasterAggregationTestCase):
         self.rasterlayer.save()
 
         # Assert that value count results have been deleted
+        self.assertEqual(ValueCountResult.objects.all().count(), 0)
+
+    def test_invalidation_changing_legend(self):
+        self.assertEqual(ValueCountResult.objects.all().count(), 2)
+        self.legend_exp.save()
         self.assertEqual(ValueCountResult.objects.all().count(), 0)

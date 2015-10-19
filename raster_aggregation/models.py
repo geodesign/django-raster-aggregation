@@ -2,8 +2,9 @@ import datetime
 
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import HStoreField
+from django.db.models.signals import post_save
 from django.dispatch import receiver
-from raster.models import RasterLayer
+from raster.models import RasterLayer, Legend
 from raster.parser import rasterlayers_parser_ended
 from raster.valuecount import aggregator
 
@@ -130,3 +131,11 @@ def remove_aggregation_results_after_rasterlayer_change(sender, instance, **kwar
     Delete ValueCountResults that depend on the rasterlayer that was changed.
     """
     ValueCountResult.objects.filter(rasterlayers=instance).delete()
+
+
+@receiver(post_save, sender=Legend)
+def remove_aggregation_results_after_legend_change(sender, instance, **kwargs):
+    """
+    Delete ValueCountResults that depend on the legend that was changed.
+    """
+    ValueCountResult.objects.filter(grouping=instance.id).delete()
