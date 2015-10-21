@@ -19,16 +19,13 @@ class RasterAggregationTaskTests(RasterAggregationTestCase):
         result = {k: float(v) for k, v in result.value.items()}
         self.assertEqual(
             result,
-            {'--': 222402, '1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
+            {'1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817}
         )
 
     def test_count_values_for_coverall(self):
         # Get result
         result = ValueCountResult.objects.get(aggregationarea__name='Coverall')
         result = {k: float(v) for k, v in result.value.items()}
-
-        # Assert the nodata value is as expected
-        self.assertEqual(result.pop("--"), self.expected.pop("0"))
 
         # Assert value counts are correct
         self.assertDictEqual(result, self.expected)

@@ -39,10 +39,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Compute expected values (same counts, but squared keys due to formula)
         expected = {str(int(k) ** 2): v for k, v in self.expected.items()}
 
-        # Pop the nodata value (this is the part that gets clipped by the coverall geom
-        result.pop('--')
-        expected.pop('0')
-
         # Assert all data values are according to the formula
         self.assertDictEqual(result, expected)
 
@@ -64,10 +60,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Compute the expected result (squaring the value of each pixel), scaling counts to acres
         expected = {str(int(k) ** 2): round(v * 1.4437426664517252) for k, v in self.expected.items()}
 
-        # Pop the nodata value (this is the part that gets clipped by the coverall geom
-        result.pop('--')
-        expected.pop('0')
-
         # Assert all data values are according to the formula
         self.assertDictEqual(result, expected)
 
@@ -88,7 +80,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Parse result
         result = json.loads(response.content)['value']
 
-        # Pop the nodata value (this is the part that gets clipped by the coverall geom
         expected = {'(x >= 2) & (x < 5)': self.expected['2'] + self.expected['3'] + self.expected['4']}
 
         # Assert all data values are according to the formula
@@ -111,7 +102,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Parse result
         result = json.loads(response.content)['value']
 
-        # Pop the nodata value (this is the part that gets clipped by the coverall geom
         expected = {'2': self.expected['2'], '4': self.expected['4']}
 
         # Assert all data values are according to the formula

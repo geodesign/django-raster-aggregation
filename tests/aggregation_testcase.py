@@ -77,5 +77,8 @@ class RasterAggregationTestCase(TestCase):
                 else:
                     self.expected[str(pair[0])] = pair[1]
 
+        # Pop the nodata value, aggregation values are computed on masked arrays
+        self.expected.pop('0')
+
     def tearDown(self):
         shutil.rmtree(self.media_root)
