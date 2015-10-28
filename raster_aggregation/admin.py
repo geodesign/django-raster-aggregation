@@ -25,6 +25,8 @@ class SelectLayerActionForm(forms.Form):
 
 class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
 
+    readonly_fields = ['modified']
+
     actions = ['parse_shapefile_data', 'compute_value_count', ]
 
     def parse_shapefile_data(self, request, queryset):
