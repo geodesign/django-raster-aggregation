@@ -1,8 +1,9 @@
+from raster.models import RasterLayer
+
 from django import forms
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from raster.models import RasterLayer
 
 from .models import AggregationArea, AggregationLayer, ValueCountResult
 from .tasks import compute_value_count_for_aggregation_layer

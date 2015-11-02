@@ -1,7 +1,6 @@
 import traceback
 
 from celery import shared_task
-
 from raster.models import RasterLayer
 
 from .models import ValueCountResult

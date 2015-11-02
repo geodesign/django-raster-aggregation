@@ -4,10 +4,10 @@ import shutil
 import tempfile
 
 import numpy
+from raster.models import Legend, LegendEntry, LegendSemantics, RasterLayer
 
 from django.core.files import File
 from django.test import TestCase
-from raster.models import Legend, LegendEntry, LegendSemantics, RasterLayer
 from raster_aggregation.models import AggregationLayer
 
 

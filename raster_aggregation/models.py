@@ -1,12 +1,13 @@
 import datetime
 
+from raster.models import Legend, RasterLayer
+from raster.parser import rasterlayers_parser_ended
+from raster.valuecount import aggregator
+
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from raster.models import RasterLayer, Legend
-from raster.parser import rasterlayers_parser_ended
-from raster.valuecount import aggregator
 
 from .parser import AggregationDataParser
 from .utils import WEB_MERCATOR_SRID, convert_to_multipolygon

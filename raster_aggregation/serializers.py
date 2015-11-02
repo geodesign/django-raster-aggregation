@@ -1,8 +1,7 @@
 import numpy
+from raster.models import RasterLayer
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
-
-from raster.models import RasterLayer
 
 from .models import AggregationArea, AggregationLayer, ValueCountResult
 
