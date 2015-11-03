@@ -18,7 +18,7 @@ setup(
     author='Daniel Wiesmann',
     author_email='daniel@urbmet.com',
     install_requires=[
-        'Django==1.9a1',
+        'Django>=1.9',
         'celery>=3.1.18',
         'django-raster>=0.1.6',
         'django-filter>=0.10.0',
