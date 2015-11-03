@@ -21,8 +21,8 @@ class RasterAggregationTestCase(TestCase):
             )
         )
 
-        rasterfile = File(open(os.path.join(self.pwd, 'data/raster.tif.zip')))
-        shapefile = File(open(os.path.join(self.pwd, 'data/shapefile.zip')))
+        rasterfile = File(open(os.path.join(self.pwd, 'data/raster.tif.zip'), 'rb'))
+        shapefile = File(open(os.path.join(self.pwd, 'data/shapefile.zip'), 'rb'))
 
         self.media_root = tempfile.mkdtemp()
 

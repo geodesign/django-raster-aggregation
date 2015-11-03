@@ -66,7 +66,7 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         formula = request.GET.get('formula')
 
         # Get zoom level
-        if request.GET.has_key('zoom'):
+        if 'zoom' in request.GET:
             zoom = int(request.GET.get('zoom'))
         else:
             # Compute zoom if not provided
@@ -76,7 +76,7 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
             )
 
         # Get boolean to return data in acres if requested
-        acres = 'acres' if request.GET.has_key('acres') else ''
+        acres = 'acres' if 'acres' in request.GET else ''
 
         # Get grouping parameter
         grouping = request.GET.get('grouping', 'auto')

@@ -31,10 +31,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(response.status_code, 200)
 
         # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content)['id'], self.area.id)
+        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
 
         # Load results into ordered dict
-        result = json.loads(response.content)['value']
+        result = json.loads(response.content.strip().decode())['value']
 
         # Compute expected values (same counts, but squared keys due to formula)
         expected = {str(int(k) ** 2): v for k, v in self.expected.items()}
@@ -51,10 +51,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(response.status_code, 200)
 
         # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content)['id'], self.area.id)
+        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
 
         # Parse result
-        result = json.loads(response.content)['value']
+        result = json.loads(response.content.strip().decode())['value']
         result = {k: round(float(v)) for k, v in result.items()}
 
         # Compute the expected result (squaring the value of each pixel), scaling counts to acres
@@ -75,10 +75,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(response.status_code, 200)
 
         # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content)['id'], self.area.id)
+        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
 
         # Parse result
-        result = json.loads(response.content)['value']
+        result = json.loads(response.content.strip().decode())['value']
 
         expected = {'(x >= 2) & (x < 5)': self.expected['2'] + self.expected['3'] + self.expected['4']}
 
@@ -97,10 +97,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(response.status_code, 200)
 
         # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content)['id'], self.area.id)
+        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
 
         # Parse result
-        result = json.loads(response.content)['value']
+        result = json.loads(response.content.strip().decode())['value']
 
         expected = {'2': self.expected['2'], '4': self.expected['4']}
 
@@ -117,7 +117,7 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         response = self.client.get(url + '?layers=a={0},b={1}&formula=a*b&zoom=4'.format(self.rasterlayer.id, self.empty_rasterlayer.id))
 
         # Parse result values
-        result = [dat['value'] for dat in json.loads(response.content)]
+        result = [dat['value'] for dat in json.loads(response.content.strip().decode())]
 
         # Assert all data values are empty
         self.assertEqual(result, [{}, {}])
