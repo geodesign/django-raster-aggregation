@@ -20,7 +20,7 @@ class RasterAggregationInvalidationTests(RasterAggregationTestCase):
         self.assertEqual(ValueCountResult.objects.all().count(), 2)
 
         # Clear parse log to trigger reparsing of rasterlayer
-        self.rasterlayer.parse_log = ''
+        self.rasterlayer.parsestatus.log = ''
         self.rasterlayer.save()
 
         # Assert that value count results have been deleted
