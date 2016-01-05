@@ -3,7 +3,7 @@ import traceback
 from celery import shared_task
 from raster.models import RasterLayer
 
-from .models import ValueCountResult
+from raster_aggregation.models import ValueCountResult
 
 
 @shared_task()

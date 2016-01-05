@@ -1,16 +1,15 @@
 import datetime
 
 from raster.models import Legend, RasterLayer
-from raster.parser import rasterlayers_parser_ended
+from raster.tiles.parser import rasterlayers_parser_ended
 from raster.valuecount import aggregator
 
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from .parser import AggregationDataParser
-from .utils import WEB_MERCATOR_SRID, convert_to_multipolygon
+from raster_aggregation.parser import AggregationDataParser
+from raster_aggregation.utils import WEB_MERCATOR_SRID, convert_to_multipolygon
 
 
 class AggregationLayer(models.Model, AggregationDataParser):
@@ -108,7 +107,7 @@ class ValueCountResult(models.Model):
             self.aggregationarea.geom,
             self.formula,
             self.units.lower() == 'acres',
-            self.grouping
+            self.grouping,
         )
 
         # Convert values to string for storage in hstore
