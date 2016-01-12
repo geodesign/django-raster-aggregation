@@ -111,7 +111,7 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Assert value count result was created
         self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
 
-    def test_aggregation_api_legend_json_grouping(self):
+    def test_aggregation_api_json_grouping(self):
         # Request result
         response = self.client.get(
             self.url + '?layers=a={0}&formula=a&grouping={1}'
@@ -141,3 +141,21 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
 
         # Assert all data values are empty
         self.assertEqual(result, [{}, {}])
+
+    def test_aggregation_null_values(self):
+        response = self.client.get(
+            self.url + '?layers=a={0}&formula=99*(a==NULL)%2B2*(~a==2)'.format(self.rasterlayer.id)
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content.strip().decode())['value']
+
+        response = self.client.get(
+            self.url + '?layers=a={0}&formula=99*(~a==0)'.format(self.rasterlayer.id)
+        )
+        self.assertEqual(response.status_code, 200)
+        result2 = json.loads(response.content.strip().decode())['value']
+
+        # Assert all data values are according to the formula
+        self.assertEqual(self.expected['2'], result['2'])
+        self.assertEqual(result['99'], result2['99'])
+        self.assertTrue(result['99'] > 0)
