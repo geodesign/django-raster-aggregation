@@ -91,8 +91,8 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
             grouping=grouping
         )
 
-        # Convert hstore values to floats
-        result = {k: float(v) for k, v in result.value.items()}
+        # Convert keys to strings and hstore values to floats
+        result = {str(k): float(v) for k, v in result.value.items()}
 
         return result
 

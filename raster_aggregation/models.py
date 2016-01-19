@@ -2,7 +2,7 @@ import datetime
 
 from raster.models import Legend, RasterLayer
 from raster.tiles.parser import rasterlayers_parser_ended
-from raster.valuecount import aggregator
+from raster.valuecount import Aggregator
 
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import HStoreField
@@ -101,14 +101,15 @@ class ValueCountResult(models.Model):
         Compute value count on save using the objects value count parameters.
         """
         # Compute aggregate result
-        aggregation_result = aggregator(
-            self.layer_names,
-            self.zoom,
-            self.aggregationarea.geom,
-            self.formula,
-            self.units.lower() == 'acres',
-            self.grouping,
+        agg = Aggregator(
+            layer_dict=self.layer_names,
+            formula=self.formula,
+            zoom=self.zoom,
+            geom=self.aggregationarea.geom,
+            acres=self.units.lower() == 'acres',
+            grouping=self.grouping,
         )
+        aggregation_result = agg.value_count()
 
         # Convert values to string for storage in hstore
         self.value = {k: str(v) for k, v in aggregation_result.items()}
