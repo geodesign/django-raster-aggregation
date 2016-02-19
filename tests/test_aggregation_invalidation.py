@@ -21,7 +21,7 @@ class RasterAggregationInvalidationTests(RasterAggregationTestCase):
 
         with self.settings(MEDIA_ROOT=self.media_root):
             # Clear parse log to trigger reparsing of rasterlayer
-            self.rasterlayer.parsestatus.status = self.rasterlayer.parsestatus.UNPARSED
+            self.rasterlayer.parsestatus.reset()
             self.rasterlayer.save()
 
         # Assert that value count results have been deleted
