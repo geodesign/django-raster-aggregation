@@ -24,7 +24,7 @@ setup(
         'django-filter>=0.10.0',
         'djangorestframework>=3.1.3',
         'djangorestframework-gis>=0.9',
-        'drf-extensions>=0.2.7'
+        'drf-extensions>=0.2.7',
     ],
     keywords=['django', 'raster', 'gis', 'gdal', 'celery', 'geo', 'spatial'],
     classifiers=[
