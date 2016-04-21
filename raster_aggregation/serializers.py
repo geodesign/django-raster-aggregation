@@ -70,11 +70,20 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
             zoom = int(request.GET.get('zoom'))
         else:
             # Compute zoom if not provided. Work at the resolution of the
-            # input layer with the highest zoom level.
-            zoom = max(
-                RasterLayer.objects.filter(id__in=ids.values())
-                .values_list('metadata__max_zoom', flat=True)
-            )
+            # input layer with the highest zoom level by default, or the
+            # lowest one if requested.
+            qs = RasterLayer.objects.filter(id__in=ids.values())
+            zlevels = qs.values_list('metadata__max_zoom', flat=True)
+            if 'minmaxzoom' in request.GET:
+                # Get the minimum of maxzoom levels
+                zoom = min(zlevels)
+            elif 'maxzoom' in request.GET:
+                # Limit maximum zoom level
+                maxzoom = int(request.GET.get('maxzoom'))
+                zoom = min(max(zlevels), maxzoom)
+            else:
+                # Compute at the maximum maxzoom (resolution of highest definition layer)
+                zoom = max(zlevels)
 
         # Get boolean to return data in acres if requested
         acres = 'acres' if 'acres' in request.GET else ''

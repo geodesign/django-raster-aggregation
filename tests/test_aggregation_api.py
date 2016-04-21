@@ -1,5 +1,7 @@
 import json
 
+from raster.models import RasterLayer
+
 from django.core.urlresolvers import reverse
 from django.test import Client
 from django.utils.http import urlquote
@@ -159,3 +161,43 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(self.expected['2'], result['2'])
         self.assertEqual(result['99'], result2['99'])
         self.assertTrue(result['99'] > 0)
+
+    def test_aggregation_api_count_maxzoom_parameter(self):
+        # Setup request with fromula that will multiply the rasterlayer by itself
+        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&maxzoom=3'.format(self.rasterlayer.id))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert result has the right aggregationarea id
+        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
+
+        # Value count was bounded by given zoom level
+        self.assertEqual(
+            ValueCountResult.objects.filter(aggregationarea=self.area).first().zoom,
+            3
+        )
+
+    def test_aggregation_api_count_minmaxzoom_parameter(self):
+        # Create another rasterlayer with low max_zoom value.
+        with self.settings(MEDIA_ROOT=self.media_root):
+            rasterlayer_low_res = RasterLayer.objects.create(
+                name='Raster data',
+                description='Second small raster for testing',
+                datatype='ca',
+                nodata='0',
+                rasterfile=self.rasterfile
+            )
+            rasterlayer_low_res.metadata.max_zoom = 3
+            rasterlayer_low_res.metadata.save()
+            rasterlayer_low_res.save()
+        # Setup request with fromula that will multiply the rasterlayer by itself
+        response = self.client.get(self.url + '?layers=a={0},b={1}&formula=a*b&minmaxzoom'.format(self.rasterlayer.id, rasterlayer_low_res.id))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert result has the right aggregationarea id
+        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
+
+        # Value count was bounded by given zoom level
+        self.assertEqual(
+            ValueCountResult.objects.filter(aggregationarea=self.area).first().zoom,
+            3
+        )
