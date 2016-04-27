@@ -65,6 +65,9 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         # Get formula
         formula = request.GET.get('formula')
 
+        # Clean formula
+        formula = formula.strip().replace(' ', '')
+
         # Get zoom level
         if 'zoom' in request.GET:
             zoom = int(request.GET.get('zoom'))
