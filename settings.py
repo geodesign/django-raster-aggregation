@@ -28,6 +28,11 @@ DATABASES = {
     }
 }
 
-DEBUG = True
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+    },
+]
 
 ROOT_URLCONF = 'raster_aggregation.urls'
