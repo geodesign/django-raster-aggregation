@@ -3,6 +3,7 @@ language: python
 python:
   - '2.7'
   - '3.4'
+  - '3.5'
 
 sudo: false
 
@@ -28,8 +29,12 @@ install:
   - pip install django-filter==0.10.0
   - pip install flake8==2.5.0
   - pip install isort==4.2.2
+  - pip install coverage==4.2
+  - pip install coveralls
 
-script: django-admin.py test
+script: coverage run --include="raster-aggregation/*" $(which django-admin.py) test
+
+after_success: coveralls
 
 notifications:
   email: false

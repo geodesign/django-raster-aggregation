@@ -4,7 +4,7 @@ import shutil
 import tempfile
 
 import numpy
-from raster.models import Legend, LegendEntry, LegendSemantics, RasterLayer
+from raster.models import Legend, LegendEntry, LegendEntryOrder, LegendSemantics, RasterLayer
 
 from django.core.files import File
 from django.test import TestCase
@@ -21,8 +21,8 @@ class RasterAggregationTestCase(TestCase):
             )
         )
 
-        self.rasterfile = File(open(os.path.join(self.pwd, 'data/raster.tif.zip'), 'rb'))
-        shapefile = File(open(os.path.join(self.pwd, 'data/shapefile.zip'), 'rb'))
+        self.rasterfile = File(open(os.path.join(self.pwd, 'data/raster.tif.zip'), 'rb'), name='raster.tif.zip')
+        shapefile = File(open(os.path.join(self.pwd, 'data/shapefile.zip'), 'rb'), name='shapefile.zip')
 
         self.media_root = tempfile.mkdtemp()
 
@@ -63,9 +63,11 @@ class RasterAggregationTestCase(TestCase):
         ent3 = LegendEntry.objects.create(semantics=sem3, expression='(x >= 2) & (x < 5)', color='#123456')
         # Create legends
         self.legend_float = Legend.objects.create(title='Float key legend')
-        self.legend_float.entries.add(ent1, ent2)
+        LegendEntryOrder.objects.create(legend=self.legend_float, legendentry=ent1, code='1')
+        LegendEntryOrder.objects.create(legend=self.legend_float, legendentry=ent2, code='2')
+
         self.legend_exp = Legend.objects.create(title='Expression key legend')
-        self.legend_exp.entries.add(ent3)
+        LegendEntryOrder.objects.create(legend=self.legend_exp, legendentry=ent3, code='1')
 
         # Compute expected totals from numpy value count
         self.expected = {}

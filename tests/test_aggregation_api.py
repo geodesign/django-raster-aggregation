@@ -183,12 +183,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
                 name='Raster data',
                 description='Second small raster for testing',
                 datatype='ca',
-                nodata='0',
+                nodata=0,
+                max_zoom=3,
                 rasterfile=self.rasterfile
             )
-            rasterlayer_low_res.metadata.max_zoom = 3
-            rasterlayer_low_res.metadata.save()
-            rasterlayer_low_res.save()
         # Setup request with fromula that will multiply the rasterlayer by itself
         response = self.client.get(self.url + '?layers=a={0},b={1}&formula=a*b&minmaxzoom'.format(self.rasterlayer.id, rasterlayer_low_res.id))
         self.assertEqual(response.status_code, 200)

@@ -19,7 +19,7 @@ class RasterAggregationTaskTests(RasterAggregationTestCase):
         result = {k: float(v) for k, v in result.value.items()}
         self.assertEqual(
             result,
-            {'1': 545, '2': 56, '3': 4094, '4': 30970, '8': 1260, '9': 2817, '15': 734}
+            {'1': 605, u'15': 747, '2': 56, '3': 4115, '4': 31362, '8': 1284, '9': 2879}
         )
 
     def test_count_values_for_coverall(self):

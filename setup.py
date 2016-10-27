@@ -20,7 +20,7 @@ setup(
     install_requires=[
         'Django>=1.9',
         'celery>=3.1.18',
-        'django-raster>=0.1.6',
+        'django-raster>=0.3',
         'django-filter>=0.10.0',
         'djangorestframework>=3.3.3',
         'djangorestframework-gis>=0.9',
