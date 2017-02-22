@@ -15,18 +15,18 @@ before_script:
   - psql -c 'create extension postgis' -U postgres -d raster_aggregation_test
 
 install: 
-  - pip install git+https://github.com/geodesign/django-raster.git@master
   - pip install Django==1.10.5
   - pip install psycopg2==2.5.3
   - pip install celery==4.0.2
   - pip install numpy
   - pip install Pillow==2.7.0
+  - pip install django-raster==0.3.1
   - pip install django-colorful==1.0.1
   - pip install djangorestframework==3.5.4
   - pip install djangorestframework-csv==2.0.0
   - pip install djangorestframework-gis==0.11
-  - pip install drf-extensions==0.2.7
-  - pip install django-filter==0.10.0
+  - pip install drf-extensions==0.3.1
+  - pip install django-filter==1.0.1
   - pip install flake8==2.5.0
   - pip install isort==4.2.2
   - pip install coverage==4.2
