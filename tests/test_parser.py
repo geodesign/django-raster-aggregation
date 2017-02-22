@@ -11,6 +11,7 @@ class AggregationAreaParseTests(RasterAggregationTestCase):
         self.assertTrue(self.agglayer.aggregationarea_set.get(name='Coverall'))
 
     def test_parse_log_was_written(self):
+        self.agglayer.refresh_from_db()
         self.assertTrue(
             'Started parsing Aggregation Layer' in self.agglayer.parse_log
         )

@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 from .models import AggregationArea, AggregationLayer, ValueCountResult
-from .tasks import compute_value_count_for_aggregation_layer
+from .tasks import aggregation_layer_parser, compute_value_count_for_aggregation_layer
 
 
 class ValueCountResultAdmin(admin.ModelAdmin):
@@ -38,7 +38,7 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
         else:
             # Send parse data command to celery
             collection = queryset[0]
-            collection.parse.delay()
+            aggregation_layer_parser.delay(collection.id)
 
             self.message_user(request,
                 "Parsing shapefile asynchronously, please check the collection parse log for status")

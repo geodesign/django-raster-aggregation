@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import django.contrib.gis.db.models.fields
-import raster_aggregation.parser
 from django.db import migrations, models
 
 
@@ -35,7 +34,6 @@ class Migration(migrations.Migration):
                 ('simplification_tolerance', models.FloatField(default=0.01)),
                 ('parse_log', models.TextField(default=b'', null=True, blank=True)),
             ],
-            bases=(models.Model, raster_aggregation.parser.AggregationDataParser, ),
         ),
         migrations.CreateModel(
             name='ValueCountResult',

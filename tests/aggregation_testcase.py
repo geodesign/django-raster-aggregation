@@ -9,6 +9,7 @@ from raster.models import Legend, LegendEntry, LegendEntryOrder, LegendSemantics
 from django.core.files import File
 from django.test import TestCase
 from raster_aggregation.models import AggregationLayer
+from raster_aggregation.tasks import aggregation_layer_parser
 
 
 class RasterAggregationTestCase(TestCase):
@@ -51,7 +52,7 @@ class RasterAggregationTestCase(TestCase):
                 shapefile=shapefile
             )
             # Parse aggregation layer
-            self.agglayer.parse()
+            aggregation_layer_parser(self.agglayer.id)
 
         # Create legend objects
         sem1 = LegendSemantics.objects.create(name='Earth')

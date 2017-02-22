@@ -1,5 +1,5 @@
 from raster_aggregation.models import ValueCountResult
-from raster_aggregation.tasks import compute_value_count_for_aggregation_layer
+from raster_aggregation.tasks import aggregation_layer_parser, compute_value_count_for_aggregation_layer
 
 from .aggregation_testcase import RasterAggregationTestCase
 
@@ -13,7 +13,8 @@ class RasterAggregationInvalidationTests(RasterAggregationTestCase):
 
     def test_invalidation_from_reparsing_agglayer(self):
         self.assertEqual(ValueCountResult.objects.all().count(), 2)
-        self.agglayer.parse()
+        with self.settings(MEDIA_ROOT=self.media_root):
+            aggregation_layer_parser(self.agglayer.id)
         self.assertEqual(ValueCountResult.objects.all().count(), 0)
 
     def test_invalidation_from_reparsing_rasterlayer(self):

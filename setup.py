@@ -8,7 +8,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-raster-aggregation',
-    version='0.1.7',
+    version='0.1.1',
     packages=['raster_aggregation', 'raster_aggregation.migrations'],
     include_package_data=True,
     license='BSD',
@@ -19,11 +19,11 @@ setup(
     author_email='daniel@urbmet.com',
     install_requires=[
         'Django>=1.9',
-        'celery>=3.1.18',
-        'django-raster>=0.3',
+        'celery>=4.0.2',
+        'django-raster>=0.3.1',
         'django-filter>=0.10.0',
-        'djangorestframework>=3.3.3',
-        'djangorestframework-gis>=0.9',
+        'djangorestframework>=3.5.4',
+        'djangorestframework-gis>=0.11',
         'drf-extensions>=0.2.7',
     ],
     keywords=['django', 'raster', 'gis', 'gdal', 'celery', 'geo', 'spatial'],

@@ -8,11 +8,10 @@ from django.contrib.gis.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from raster_aggregation.parser import AggregationDataParser
 from raster_aggregation.utils import WEB_MERCATOR_SRID, convert_to_multipolygon
 
 
-class AggregationLayer(models.Model, AggregationDataParser):
+class AggregationLayer(models.Model):
     """
     Source data for aggregation layers and meta information.
     """
