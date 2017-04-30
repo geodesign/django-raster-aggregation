@@ -144,6 +144,25 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Assert all data values are empty
         self.assertEqual(result, [{}, {}])
 
+    def test_filter_by_layer(self):
+        url = reverse('aggregationareavalue-list')
+
+        # Setup request with fromula that will multiply the rasterlayer by itself
+        response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
+            self.rasterlayer.id,
+            self.agglayer.id,
+        ))
+
+        count = len(json.loads(response.content.strip().decode()))
+        self.assertEqual(count, self.agglayer.aggregationarea_set.count())
+
+        response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
+            self.rasterlayer.id,
+            1234,  # Not existing agglayer id.
+        ))
+        count = len(json.loads(response.content.strip().decode()))
+        self.assertEqual(0, count)
+
     def test_aggregation_null_values(self):
         response = self.client.get(
             self.url + '?layers=a={0}&formula=99*(a==NULL)%2B2*(~a==2)'.format(self.rasterlayer.id)

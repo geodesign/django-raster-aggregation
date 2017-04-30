@@ -20,6 +20,7 @@ class AggregationAreaViewSet(viewsets.ReadOnlyModelViewSet):
     Regular aggregation Area model view endpoint.
     """
     serializer_class = AggregationAreaSimplifiedSerializer
+    filter_backends = (filters.DjangoFilterBackend, )
     filter_fields = ('aggregationlayer', )
 
     def get_queryset(self):
@@ -61,6 +62,7 @@ class AggregationAreaValueViewSet(viewsets.ReadOnlyModelViewSet):
     Regular aggregation Area model view endpoint.
     """
     serializer_class = AggregationAreaValueSerializer
+    filter_backends = (filters.DjangoFilterBackend, )
     filter_fields = ('aggregationlayer', )
 
     def initial(self, request, *args, **kwargs):
