@@ -76,12 +76,18 @@ class AggregationAreaValueViewSet(viewsets.ReadOnlyModelViewSet):
 
         return super(AggregationAreaValueViewSet, self).initial(request, *args, **kwargs)
 
-    def get_queryset(self):
-        qs = AggregationArea.objects.all()
+    def get_ids(self):
         ids = self.request.query_params.get('ids')
         if ids:
-            ids = ids.split(',')
-            return qs.filter(id__in=ids)
+            return {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
+        else:
+            return {}
+
+    def get_queryset(self):
+        qs = AggregationArea.objects.all()
+        ids = self.get_ids()
+        if ids:
+            qs = qs.filter(id__in=ids.values())
         return qs
 
 

@@ -46,6 +46,12 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         model = AggregationArea
         fields = ('id', 'value')
 
+    def get_ids(self):
+        # Get layer ids.
+        ids = self.context['request'].GET.get('layers').split(',')
+        # Parse layer ids into dictionary with variable names.
+        return {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
+
     def get_value(self, obj):
         """
         Get or create value count for this aggregation area.
@@ -56,11 +62,8 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
         # Get request object
         request = self.context['request']
 
-        # Get layer ids
-        ids = request.GET.get('layers').split(',')
-
-        # Parse layer ids into dictionary with variable names
-        ids = {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
+        # Get ids
+        ids = self.get_ids()
 
         # Get formula
         formula = request.GET.get('formula')
