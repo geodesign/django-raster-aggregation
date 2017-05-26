@@ -1,18 +1,13 @@
 from rest_framework import filters, viewsets
-from rest_framework.exceptions import APIException
 from rest_framework_extensions.cache.decorators import cache_response
 from rest_framework_gis.filters import InBBOXFilter
 
-from .models import AggregationArea, AggregationLayer
-from .serializers import (
+from raster_aggregation.exceptions import MissingQueryParameter
+from raster_aggregation.models import AggregationArea, AggregationLayer
+from raster_aggregation.serializers import (
     AggregationAreaGeoSerializer, AggregationAreaSimplifiedSerializer, AggregationAreaValueSerializer,
     AggregationLayerSerializer
 )
-
-
-class MissingQueryParameter(APIException):
-    status_code = 500
-    default_detail = 'Missing Query Parameter.'
 
 
 class AggregationAreaViewSet(viewsets.ReadOnlyModelViewSet):
