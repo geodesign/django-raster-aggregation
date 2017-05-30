@@ -44,3 +44,5 @@ ROOT_URLCONF = 'raster_aggregation.urls'
 
 CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES = True
+task_always_eager = True
+task_eager_propagates = True
