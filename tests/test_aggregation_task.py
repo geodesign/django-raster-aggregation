@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from raster_aggregation.models import ValueCountResult
 from raster_aggregation.tasks import compute_value_count_for_aggregation_layer
 

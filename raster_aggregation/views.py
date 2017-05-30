@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from rest_framework import filters, viewsets
 from rest_framework_extensions.cache.decorators import cache_response
 from rest_framework_gis.filters import InBBOXFilter

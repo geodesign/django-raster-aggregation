@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from raster.models import RasterLayer
 
 from django import forms
