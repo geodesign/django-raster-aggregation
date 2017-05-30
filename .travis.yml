@@ -16,25 +16,13 @@ before_script:
 
 install:
   - pip install -e .
-  #- pip install Django==1.11.1
   - pip install psycopg2==2.7.1
-  #- pip install celery==4.0.2
-  #- pip install numpy
-  #- pip install Pillow==4.1.1
-  #- pip install django-raster==0.4
-  #- pip install django-colorful==1.2
-  #- pip install djangorestframework==3.6.3
-  #- pip install djangorestframework-csv==2.0.0
-  #- pip install djangorestframework-gis==0.11.2
-  #- pip install drf-extensions==0.3.1
-  #- pip install django-filter==1.0.1
   - pip install flake8==3.3.0
   - pip install isort==4.2.5
   - pip install coverage==4.4.1
-  #- pip install django-filter==1.0.4
   - pip install coveralls
 
-script: coverage run --include="raster-aggregation/*" $(which django-admin.py) test
+script: coverage run --include="raster-aggregation/*" ./manage.py test
 
 after_success: coveralls
 
