@@ -5,7 +5,8 @@ from raster.models import RasterLayer
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
-from .models import AggregationArea, AggregationLayer, ValueCountResult
+from raster_aggregation.models import AggregationArea, AggregationLayer, ValueCountResult
+from raster_aggregation.tasks import compute_single_value_count_result
 
 
 class AggregationAreaSimplifiedSerializer(serializers.ModelSerializer):
@@ -46,7 +47,7 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AggregationArea
-        fields = ('id', 'value')
+        fields = ('id', 'value', )
 
     def get_ids(self):
         # Get layer ids.
@@ -108,6 +109,8 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
             units=acres,
             grouping=grouping
         )
+
+        compute_single_value_count_result(result.id)
 
         # Convert keys to strings and hstore values to floats
         result = {str(k): float(v) for k, v in result.value.items()}

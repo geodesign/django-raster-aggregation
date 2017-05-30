@@ -6,7 +6,7 @@ import shutil
 import tempfile
 
 import numpy
-from raster.models import Legend, LegendEntry, LegendEntryOrder, LegendSemantics, RasterLayer
+from raster.models import Legend, LegendEntry, LegendSemantics, RasterLayer
 
 from django.core.files import File
 from django.test import TestCase
@@ -56,21 +56,18 @@ class RasterAggregationTestCase(TestCase):
             # Parse aggregation layer
             aggregation_layer_parser(self.agglayer.id)
 
-        # Create legend objects
+        # Create legend semantics.
         sem1 = LegendSemantics.objects.create(name='Earth')
         sem2 = LegendSemantics.objects.create(name='Wind')
         sem3 = LegendSemantics.objects.create(name='Fire')
-        # Create legend entries (semantics with colors and expressions)
-        ent1 = LegendEntry.objects.create(semantics=sem1, expression='4', color='#123456')
-        ent2 = LegendEntry.objects.create(semantics=sem2, expression='2', color='#654321')
-        ent3 = LegendEntry.objects.create(semantics=sem3, expression='(x >= 2) & (x < 5)', color='#123456')
-        # Create legends
+
+        # Create legends.
         self.legend_float = Legend.objects.create(title='Float key legend')
-        LegendEntryOrder.objects.create(legend=self.legend_float, legendentry=ent1, code='1')
-        LegendEntryOrder.objects.create(legend=self.legend_float, legendentry=ent2, code='2')
+        LegendEntry.objects.create(semantics=sem1, expression='4', color='#123456', legend=self.legend_float, code='1')
+        LegendEntry.objects.create(semantics=sem2, expression='2', color='#654321', legend=self.legend_float, code='2')
 
         self.legend_exp = Legend.objects.create(title='Expression key legend')
-        LegendEntryOrder.objects.create(legend=self.legend_exp, legendentry=ent3, code='1')
+        LegendEntry.objects.create(semantics=sem3, expression='(x >= 2) & (x < 5)', color='#123456', legend=self.legend_exp, code='1')
 
         # Compute expected totals from numpy value count
         self.expected = {}

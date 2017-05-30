@@ -21,7 +21,7 @@ setup(
         'Django>=1.9',
         'celery>=4.0.2',
         'django-raster>=0.3.1',
-        'django-filter>=1.0.1',
+        'django-filter>=1.0.4',
         'djangorestframework>=3.5.4',
         'djangorestframework-gis>=0.11',
         'drf-extensions>=0.3.1',

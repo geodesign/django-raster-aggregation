@@ -79,6 +79,18 @@ class ValueCountResult(models.Model):
     """
     A class to store precomputed aggregation values from raster layers.
     """
+    SCHEDULED = 0
+    COMPUTING = 1
+    FINISHED = 2
+    FAILED = 3
+
+    STATUS = (
+        (SCHEDULED, 'Scheduled'),
+        (COMPUTING, 'Computing'),
+        (FINISHED, 'Finished'),
+        (FAILED, 'Failed'),
+    )
+
     aggregationarea = models.ForeignKey(AggregationArea)
     rasterlayers = models.ManyToManyField(RasterLayer)
     formula = models.TextField()
@@ -86,8 +98,9 @@ class ValueCountResult(models.Model):
     zoom = models.PositiveSmallIntegerField()
     units = models.TextField(default='')
     grouping = models.TextField(default='auto')
-    value = HStoreField()
+    value = HStoreField(default={})
     created = models.DateTimeField(auto_now=True)
+    status = models.IntegerField(choices=STATUS, default=SCHEDULED)
 
     class Meta:
         unique_together = (
@@ -97,26 +110,34 @@ class ValueCountResult(models.Model):
     def __str__(self):
         return "{id} - {area}".format(id=self.id, area=self.aggregationarea.name)
 
-    def save(self, *args, **kwargs):
+    def populate(self):
         """
-        Compute value count on save using the objects value count parameters.
+        Compute value count using the objects value count parameters.
         """
-        # Compute aggregate result
-        agg = Aggregator(
-            layer_dict=self.layer_names,
-            formula=self.formula,
-            zoom=self.zoom,
-            geom=self.aggregationarea.geom,
-            acres=self.units.lower() == 'acres',
-            grouping=self.grouping,
-        )
-        aggregation_result = agg.value_count()
+        # Update status
+        self.status = self.COMPUTING
+        self.save()
 
-        # Convert values to string for storage in hstore
-        self.value = {k: str(v) for k, v in aggregation_result.items()}
+        try:
+            # Compute aggregate result
+            agg = Aggregator(
+                layer_dict=self.layer_names,
+                formula=self.formula,
+                zoom=self.zoom,
+                geom=self.aggregationarea.geom,
+                acres=self.units.lower() == 'acres',
+                grouping=self.grouping,
+            )
+            aggregation_result = agg.value_count()
 
-        # Save value count result data
-        super(ValueCountResult, self).save(*args, **kwargs)
+            # Convert values to string for storage in hstore
+            self.value = {k: str(v) for k, v in aggregation_result.items()}
+
+            self.status = self.FINISHED
+        except:
+            self.status = self.FAILED
+
+        self.save()
 
         # Add raster layers for tracking change and subsequent invalidation
         # of value count results. The rasterlayer praser start signal will use

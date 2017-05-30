@@ -40,7 +40,7 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
         else:
             # Send parse data command to celery
             collection = queryset[0]
-            aggregation_layer_parser.delay(collection.id)
+            aggregation_layer_parser(collection.id)
 
             self.message_user(request,
                 "Parsing shapefile asynchronously, please check the collection parse log for status")
@@ -58,7 +58,7 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
                 rasterlayers = form.cleaned_data['rasterlayers']
 
                 for rst in rasterlayers:
-                    compute_value_count_for_aggregation_layer.delay(
+                    compute_value_count_for_aggregation_layer(
                         layer,
                         rst.id,
                         compute_area=True
@@ -86,6 +86,7 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
                 'title': u'Select Layer on which to Compute Value Counts'
             }
         )
+
 
 admin.site.register(AggregationArea)
 admin.site.register(ValueCountResult, ValueCountResultAdmin)

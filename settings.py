@@ -41,3 +41,8 @@ TEMPLATES = [
 ]
 
 ROOT_URLCONF = 'raster_aggregation.urls'
+
+# RASTER_TILESIZE = 256
+# RASTER_USE_CELERY = True
+# CELERY_ALWAYS_EAGER = True
+# CELERY_EAGER_PROPAGATES = True

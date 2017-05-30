@@ -143,7 +143,6 @@ def aggregation_layer_parser(agglayer_id):
     shutil.rmtree(tmpdir)
 
 
-@task()
 def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True, grouping='auto'):
     """
     Precomputes value counts for a given aggregation area and a rasterlayer.
@@ -176,7 +175,7 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True, 
 
         try:
             # Store result, this automatically creates value on save
-            ValueCountResult.objects.get_or_create(
+            result, created = ValueCountResult.objects.get_or_create(
                 aggregationarea=area,
                 formula=formula,
                 layer_names=ids,
@@ -184,6 +183,7 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True, 
                 units='acres' if compute_area else '',
                 grouping=grouping
             )
+            compute_single_value_count_result(result.id)
         except:
             obj.log(
                 'ERROR: Failed to compute value count for '
@@ -198,32 +198,14 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True, 
 
 
 @task()
-def compute_single_value_count_result(area, formula, layer_names, zoom, units, grouping='auto'):
+def compute_single_value_count_result(valuecount_id):
     """
-    Precomputes value counts for a given input set.
+    Computes value counts for a given input set.
     """
-    # Compute zoom if not provided
-    if zoom is None:
-        # Get layer ids
-        ids = layer_names.split(',')
-
-        # Parse layer ids into dictionary with variable names
-        ids = {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
-
-        # Compute zoom level
-        zoom = min(
-            RasterLayer.objects.filter(id__in=ids.values())
-            .values_list('metadata__max_zoom', flat=True)
-        )
-
-    ValueCountResult.objects.get_or_create(
-        aggregationarea=area,
-        formula=formula,
-        layer_names=ids,
-        zoom=zoom,
-        units=units,
-        grouping=grouping
-    )
+    vc = ValueCountResult.objects.get(id=valuecount_id)
+    # If this object was newly created, populate its value count asynchronously.
+    if vc.status not in (ValueCountResult.COMPUTING, ValueCountResult.FINISHED):
+        vc.populate()
 
 
 @task()
@@ -246,7 +228,7 @@ def compute_batch_value_count_results(aggregationlayer, formula, layer_names, zo
         )
 
     for area in aggregationlayer.aggregationarea_set.all():
-        ValueCountResult.objects.get_or_create(
+        result, created = ValueCountResult.objects.get_or_create(
             aggregationarea=area,
             formula=formula,
             layer_names=ids,
@@ -254,3 +236,4 @@ def compute_batch_value_count_results(aggregationlayer, formula, layer_names, zo
             units=units,
             grouping=grouping
         )
+        compute_single_value_count_result(result.id)

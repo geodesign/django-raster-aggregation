@@ -38,7 +38,14 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Assert result has the right aggregationarea id
         self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
 
-        # Load results into ordered dict
+        # Load initial results into ordered dict
+        result = json.loads(response.content.strip().decode())
+
+        self.assertEqual(result['value'], {})
+
+        # Request again to get async result.
+        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&zoom=11'.format(self.rasterlayer.id))
+        self.assertEqual(response.status_code, 200)
         result = json.loads(response.content.strip().decode())['value']
 
         # Compute expected values (same counts, but squared keys due to formula)
@@ -52,6 +59,7 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
 
     def test_aggregation_api_areas(self):
         # Request result
+        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&acres'.format(self.rasterlayer.id))
         response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&acres'.format(self.rasterlayer.id))
         self.assertEqual(response.status_code, 200)
 
@@ -73,6 +81,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
 
     def test_aggregation_api_legend_expression_grouping(self):
         # Request result
+        response = self.client.get(
+            self.url + '?layers=a={0}&formula=a&grouping={1}'
+            .format(self.rasterlayer.id, self.legend_exp.id)
+        )
         response = self.client.get(
             self.url + '?layers=a={0}&formula=a&grouping={1}'
             .format(self.rasterlayer.id, self.legend_exp.id)
@@ -99,6 +111,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
             self.url + '?layers=a={0}&formula=a&grouping={1}'
             .format(self.rasterlayer.id, self.legend_float.id)
         )
+        response = self.client.get(
+            self.url + '?layers=a={0}&formula=a&grouping={1}'
+            .format(self.rasterlayer.id, self.legend_float.id)
+        )
         self.assertEqual(response.status_code, 200)
 
         # Assert result has the right aggregationarea id
@@ -121,6 +137,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
             self.url + '?layers=a={0}&formula=a&grouping={1}'
             .format(self.rasterlayer.id, urlquote(self.legend_exp.json))
         )
+        response = self.client.get(
+            self.url + '?layers=a={0}&formula=a&grouping={1}'
+            .format(self.rasterlayer.id, urlquote(self.legend_exp.json))
+        )
         self.assertEqual(response.status_code, 200)
 
         # Assert result has the right aggregationarea id
@@ -139,6 +159,7 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
 
         # Setup request with fromula that will multiply the rasterlayer by itself
         response = self.client.get(url + '?layers=a={0},b={1}&formula=a*b&zoom=4'.format(self.rasterlayer.id, self.empty_rasterlayer.id))
+        response = self.client.get(url + '?layers=a={0},b={1}&formula=a*b&zoom=4'.format(self.rasterlayer.id, self.empty_rasterlayer.id))
 
         # Parse result values
         result = [dat['value'] for dat in json.loads(response.content.strip().decode())]
@@ -154,10 +175,18 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
             self.rasterlayer.id,
             self.agglayer.id,
         ))
+        response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
+            self.rasterlayer.id,
+            self.agglayer.id,
+        ))
 
         count = len(json.loads(response.content.strip().decode()))
         self.assertEqual(count, self.agglayer.aggregationarea_set.count())
 
+        response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
+            self.rasterlayer.id,
+            1234,  # Not existing agglayer id.
+        ))
         response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
             self.rasterlayer.id,
             1234,  # Not existing agglayer id.
@@ -169,9 +198,15 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         response = self.client.get(
             self.url + '?layers=a={0}&formula=99*(a==NULL)%2B2*(~a==2)'.format(self.rasterlayer.id)
         )
+        response = self.client.get(
+            self.url + '?layers=a={0}&formula=99*(a==NULL)%2B2*(~a==2)'.format(self.rasterlayer.id)
+        )
         self.assertEqual(response.status_code, 200)
         result = json.loads(response.content.strip().decode())['value']
 
+        response = self.client.get(
+            self.url + '?layers=a={0}&formula=99*(~a==0)'.format(self.rasterlayer.id)
+        )
         response = self.client.get(
             self.url + '?layers=a={0}&formula=99*(~a==0)'.format(self.rasterlayer.id)
         )
@@ -185,6 +220,7 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
 
     def test_aggregation_api_count_maxzoom_parameter(self):
         # Setup request with fromula that will multiply the rasterlayer by itself
+        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&maxzoom=3'.format(self.rasterlayer.id))
         response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&maxzoom=3'.format(self.rasterlayer.id))
         self.assertEqual(response.status_code, 200)
 
@@ -209,6 +245,7 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
                 rasterfile=self.rasterfile
             )
         # Setup request with fromula that will multiply the rasterlayer by itself
+        response = self.client.get(self.url + '?layers=a={0},b={1}&formula=a*b&minmaxzoom'.format(self.rasterlayer.id, rasterlayer_low_res.id))
         response = self.client.get(self.url + '?layers=a={0},b={1}&formula=a*b&minmaxzoom'.format(self.rasterlayer.id, rasterlayer_low_res.id))
         self.assertEqual(response.status_code, 200)
 
