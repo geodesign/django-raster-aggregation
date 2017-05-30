@@ -183,7 +183,7 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True, 
                 units='acres' if compute_area else '',
                 grouping=grouping
             )
-            compute_single_value_count_result(result.id)
+            compute_single_value_count_result.delay(result.id)
         except:
             obj.log(
                 'ERROR: Failed to compute value count for '
@@ -236,4 +236,4 @@ def compute_batch_value_count_results(aggregationlayer, formula, layer_names, zo
             units=units,
             grouping=grouping
         )
-        compute_single_value_count_result(result.id)
+        compute_single_value_count_result.delay(result.id)

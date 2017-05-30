@@ -110,7 +110,7 @@ class AggregationAreaValueSerializer(serializers.ModelSerializer):
             grouping=grouping
         )
 
-        compute_single_value_count_result(result.id)
+        compute_single_value_count_result.delay(result.id)
 
         # Convert keys to strings and hstore values to floats
         result = {str(k): float(v) for k, v in result.value.items()}
