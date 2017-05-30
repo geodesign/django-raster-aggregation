@@ -8,7 +8,7 @@ python:
 sudo: false
 
 env:
-    - DB_NAME=raster_aggregation_test PYTHONPATH=$PYTHONPATH:$PWD DJANGO_SETTINGS_MODULE=settings 
+    - DB_NAME=raster_aggregation_test PYTHONPATH=$PYTHONPATH:$PWD
 
 before_script:
   - psql -c 'create database raster_aggregation_test' -U postgres
