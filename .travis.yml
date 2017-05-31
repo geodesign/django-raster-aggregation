@@ -8,7 +8,7 @@ python:
 sudo: false
 
 env:
-    - DB_NAME=raster_aggregation_test PYTHONPATH=$PYTHONPATH:$PWD
+    - DB_NAME=raster_aggregation_test PYTHONPATH=$PYTHONPATH:$PWD DJANGO_SETTINGS_MODULE=tests.testproj.settings
 
 before_script:
   - psql -c 'create database raster_aggregation_test' -U postgres
@@ -22,7 +22,7 @@ install:
   - pip install coverage==4.4.1
   - pip install coveralls
 
-script: coverage run --include="raster-aggregation/*" ./manage.py test
+script: coverage run --include="raster-aggregation/*" $(which django-admin.py) test
 
 after_success: coveralls
 
