@@ -1,12 +1,10 @@
 from __future__ import unicode_literals
 
 import numpy
-from raster.models import RasterLayer
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from raster_aggregation.models import AggregationArea, AggregationLayer, ValueCountResult
-from raster_aggregation.tasks import compute_single_value_count_result
 
 
 class AggregationAreaSimplifiedSerializer(serializers.ModelSerializer):
@@ -41,81 +39,25 @@ class AggregationAreaGeoSerializer(GeoFeatureModelSerializer):
         fields = ('id', 'name', 'aggregationlayer')
 
 
-class AggregationAreaValueSerializer(serializers.ModelSerializer):
+class ValueCountResultSerializer(serializers.ModelSerializer):
 
+    rasterlayers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     value = serializers.SerializerMethodField()
+    zoom = serializers.IntegerField(default=-1)
 
     class Meta:
-        model = AggregationArea
-        fields = ('id', 'value', )
-
-    def get_ids(self):
-        # Get layer ids.
-        ids = self.context['request'].GET.get('layers').split(',')
-        # Parse layer ids into dictionary with variable names.
-        return {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
+        model = ValueCountResult
+        fields = (
+            'id', 'aggregationarea', 'rasterlayers', 'formula', 'layer_names',
+            'zoom', 'units', 'grouping', 'value', 'created', 'status',
+        )
+        read_only_fields = ('id', 'value', 'created', 'status', )
 
     def get_value(self, obj):
         """
-        Get or create value count for this aggregation area.
-
-        Should currently only be used with categorical rasters, as it will look
-        for unique values.
+        Convert keys to strings and hstore values to floats.
         """
-        # Get request object
-        request = self.context['request']
-
-        # Get ids
-        ids = self.get_ids()
-
-        # Get formula
-        formula = request.GET.get('formula')
-
-        # Clean formula
-        formula = formula.strip().replace(' ', '')
-
-        # Get zoom level
-        if 'zoom' in request.GET:
-            zoom = int(request.GET.get('zoom'))
-        else:
-            # Compute zoom if not provided. Work at the resolution of the
-            # input layer with the highest zoom level by default, or the
-            # lowest one if requested.
-            qs = RasterLayer.objects.filter(id__in=ids.values())
-            zlevels = qs.values_list('metadata__max_zoom', flat=True)
-            if 'minmaxzoom' in request.GET:
-                # Get the minimum of maxzoom levels
-                zoom = min(zlevels)
-            elif 'maxzoom' in request.GET:
-                # Limit maximum zoom level
-                maxzoom = int(request.GET.get('maxzoom'))
-                zoom = min(max(zlevels), maxzoom)
-            else:
-                # Compute at the maximum maxzoom (resolution of highest definition layer)
-                zoom = max(zlevels)
-
-        # Get boolean to return data in acres if requested
-        acres = 'acres' if 'acres' in request.GET else ''
-
-        # Get grouping parameter
-        grouping = request.GET.get('grouping', 'auto')
-
-        # Get or create impact value result
-        result, created = ValueCountResult.objects.get_or_create(
-            aggregationarea=obj,
-            formula=formula,
-            layer_names=ids,
-            zoom=zoom,
-            units=acres,
-            grouping=grouping
-        )
-
-        compute_single_value_count_result.delay(result.id)
-
-        # Convert keys to strings and hstore values to floats
-        result = {str(k): float(v) for k, v in result.value.items()}
-
-        return result
+        return {str(k): float(v) for k, v in obj.value.items()}
 
 
 class AggregationLayerSerializer(serializers.ModelSerializer):

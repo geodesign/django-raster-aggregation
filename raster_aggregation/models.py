@@ -83,12 +83,14 @@ class ValueCountResult(models.Model):
     COMPUTING = 1
     FINISHED = 2
     FAILED = 3
+    OUTDATED = 4
 
     STATUS = (
         (SCHEDULED, 'Scheduled'),
         (COMPUTING, 'Computing'),
         (FINISHED, 'Finished'),
         (FAILED, 'Failed'),
+        (OUTDATED, 'Outdated'),
     )
 
     aggregationarea = models.ForeignKey(AggregationArea)
@@ -139,26 +141,19 @@ class ValueCountResult(models.Model):
 
         self.save()
 
-        # Add raster layers for tracking change and subsequent invalidation
-        # of value count results. The rasterlayer praser start signal will use
-        # this information to remove all outdated value count results on
-        # reparse of raster layers.
-        for layer_id in self.layer_names.values():
-            lyr = RasterLayer.objects.get(id=layer_id)
-            self.rasterlayers.add(lyr)
-
 
 @receiver(rasterlayers_parser_ended, sender=RasterLayer)
 def remove_aggregation_results_after_rasterlayer_change(sender, instance, **kwargs):
     """
-    Delete ValueCountResults that depend on the rasterlayer that was changed.
+    Update the status of ValueCountResults that depend on the rasterlayer that was changed.
     """
-    ValueCountResult.objects.filter(rasterlayers=instance).delete()
+    instance.valuecountresult_set.update(status=ValueCountResult.OUTDATED)
+    ValueCountResult.objects.filter(rasterlayers=instance).update(status=ValueCountResult.OUTDATED)
 
 
 @receiver(post_save, sender=Legend)
 def remove_aggregation_results_after_legend_change(sender, instance, **kwargs):
     """
-    Delete ValueCountResults that depend on the legend that was changed.
+    Update the status of ValueCountResults that depend on the legend that was changed.
     """
-    ValueCountResult.objects.filter(grouping=instance.id).delete()
+    ValueCountResult.objects.filter(grouping=instance.id).update(status=ValueCountResult.OUTDATED)

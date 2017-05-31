@@ -3,12 +3,11 @@ from __future__ import unicode_literals
 from rest_framework import routers
 
 from django.conf.urls import include, url
-
-from .views import AggregationAreaValueViewSet
+from raster_aggregation.views import ValueCountResultViewSet
 
 router = routers.DefaultRouter()
 
-router.register(r'aggregationareavalue', AggregationAreaValueViewSet, base_name='aggregationareavalue')
+router.register(r'valuecountresult', ValueCountResultViewSet, base_name='valuecountresult')
 
 urlpatterns = [
 

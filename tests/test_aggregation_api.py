@@ -6,7 +6,6 @@ from raster.models import RasterLayer
 
 from django.core.urlresolvers import reverse_lazy as reverse
 from django.test import Client
-from django.utils.http import urlquote
 from raster_aggregation.models import AggregationArea, ValueCountResult
 
 from .aggregation_testcase import RasterAggregationTestCase
@@ -28,47 +27,58 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.client = Client()
 
         # Get api url for the given aggregation area
-        self.url = reverse('aggregationareavalue-detail', kwargs={'pk': self.area.id})
+        self.url = reverse('valuecountresult-list')
+
+        self.data = {
+            'aggregationarea': self.area.id,
+            'rasterlayers': [self.rasterlayer.id],
+            'layer_names': {'a': self.rasterlayer.id, 'b': self.rasterlayer.id},
+            'formula': 'a*b',
+        }
+
+    def _create_obj(self):
+        #  Create object through api.
+        response = self.client.post(self.url, json.dumps(self.data), format='json', content_type='application/json')
+        self.assertEqual(response.status_code, 201)
+        result = json.loads(response.content.strip().decode())
+        # Async result has not been created, but scheduled.
+        self.assertEqual(result['value'], {})
+        self.assertEqual(result['status'], ValueCountResult.SCHEDULED)
+
+        # Get detail view to obtain value count result.
+        url = reverse('valuecountresult-detail', kwargs={'pk': result['id']})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content.strip().decode())
+        # Assert result has the right aggregationarea id
+        self.assertEqual(result['aggregationarea'], self.area.id)
+        return result
 
     def test_aggregation_api_count(self):
-        # Setup request with fromula that will multiply the rasterlayer by itself
-        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&zoom=11'.format(self.rasterlayer.id))
-        self.assertEqual(response.status_code, 200)
-
-        # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
-
-        # Load initial results into ordered dict
-        result = json.loads(response.content.strip().decode())
-
-        self.assertEqual(result['value'], {})
-
-        # Request again to get async result.
-        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&zoom=11'.format(self.rasterlayer.id))
-        self.assertEqual(response.status_code, 200)
-        result = json.loads(response.content.strip().decode())['value']
+        result = self._create_obj()
 
         # Compute expected values (same counts, but squared keys due to formula)
         expected = {str(int(k) ** 2): v for k, v in self.expected.items()}
 
         # Assert all data values are according to the formula
-        self.assertDictEqual(result, expected)
+        self.assertDictEqual(result['value'], expected)
 
-        # Assert value count result was created
-        self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
+    def test_aggregation_api_count_explicit_zoom(self):
+        self.data['zoom'] = 11
+        result = self._create_obj()
+
+        # Compute expected values (same counts, but squared keys due to formula)
+        expected = {str(int(k) ** 2): v for k, v in self.expected.items()}
+
+        self.assertDictEqual(result['value'], expected)
 
     def test_aggregation_api_areas(self):
-        # Request result
-        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&acres'.format(self.rasterlayer.id))
-        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&acres'.format(self.rasterlayer.id))
-        self.assertEqual(response.status_code, 200)
+        #  Create object through api.
+        self.data['units'] = 'acres'
+        result = self._create_obj()
 
-        # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
-
-        # Parse result
-        result = json.loads(response.content.strip().decode())['value']
-        result = {k: round(float(v)) for k, v in result.items()}
+        # Simplify result to integers (ignore rounding differences).
+        result = {k: round(float(v)) for k, v in result['value'].items()}
 
         # Compute the expected result (squaring the value of each pixel), scaling counts to acres
         expected = {str(int(k) ** 2): round(v * 1.4437426664517252) for k, v in self.expected.items()}
@@ -76,142 +86,69 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Assert all data values are according to the formula
         self.assertDictEqual(result, expected)
 
-        # Assert value count result was created
-        self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
-
     def test_aggregation_api_legend_expression_grouping(self):
-        # Request result
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=a&grouping={1}'
-            .format(self.rasterlayer.id, self.legend_exp.id)
-        )
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=a&grouping={1}'
-            .format(self.rasterlayer.id, self.legend_exp.id)
-        )
-        self.assertEqual(response.status_code, 200)
-
-        # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
-
-        # Parse result
-        result = json.loads(response.content.strip().decode())['value']
+        #  Create object through api.
+        self.data['grouping'] = self.legend_exp.id
+        self.data['formula'] = 'a'
+        result = self._create_obj()
 
         expected = {'(x >= 2) & (x < 5)': self.expected['2'] + self.expected['3'] + self.expected['4']}
 
         # Assert all data values are according to the formula
-        self.assertDictEqual(result, expected)
-
-        # Assert value count result was created
-        self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
+        self.assertDictEqual(result['value'], expected)
 
     def test_aggregation_api_legend_float_grouping(self):
-        # Request result
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=a&grouping={1}'
-            .format(self.rasterlayer.id, self.legend_float.id)
-        )
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=a&grouping={1}'
-            .format(self.rasterlayer.id, self.legend_float.id)
-        )
-        self.assertEqual(response.status_code, 200)
-
-        # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
-
-        # Parse result
-        result = json.loads(response.content.strip().decode())['value']
+        #  Create object through api.
+        self.data['grouping'] = self.legend_float.id
+        self.data['formula'] = 'a'
+        result = self._create_obj()
 
         expected = {'2': self.expected['2'], '4': self.expected['4']}
 
         # Assert all data values are according to the formula
-        self.assertDictEqual(result, expected)
-
-        # Assert value count result was created
-        self.assertTrue(ValueCountResult.objects.filter(aggregationarea=self.area).exists())
+        self.assertDictEqual(result['value'], expected)
 
     def test_aggregation_api_json_grouping(self):
-        # Request result
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=a&grouping={1}'
-            .format(self.rasterlayer.id, urlquote(self.legend_exp.json))
-        )
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=a&grouping={1}'
-            .format(self.rasterlayer.id, urlquote(self.legend_exp.json))
-        )
-        self.assertEqual(response.status_code, 200)
-
-        # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
-
-        # Parse result
-        result = json.loads(response.content.strip().decode())['value']
+        #  Create object through api.
+        self.data['grouping'] = self.legend_exp.json
+        self.data['formula'] = 'a'
+        result = self._create_obj()
 
         expected = {'(x >= 2) & (x < 5)': self.expected['2'] + self.expected['3'] + self.expected['4']}
 
         # Assert all data values are according to the formula
-        self.assertDictEqual(result, expected)
+        self.assertDictEqual(result['value'], expected)
 
     def test_value_count_for_raster_with_missing_tile(self):
-        url = reverse('aggregationareavalue-list')
-
-        # Setup request with fromula that will multiply the rasterlayer by itself
-        response = self.client.get(url + '?layers=a={0},b={1}&formula=a*b&zoom=4'.format(self.rasterlayer.id, self.empty_rasterlayer.id))
-        response = self.client.get(url + '?layers=a={0},b={1}&formula=a*b&zoom=4'.format(self.rasterlayer.id, self.empty_rasterlayer.id))
-
-        # Parse result values
-        result = [dat['value'] for dat in json.loads(response.content.strip().decode())]
+        self.data['layer_names'] = {'a': self.rasterlayer.id, 'b': self.empty_rasterlayer.id}
+        result = self._create_obj()
 
         # Assert all data values are empty
-        self.assertEqual(result, [{}, {}])
+        self.assertEqual(result['value'], {})
 
     def test_filter_by_layer(self):
-        url = reverse('aggregationareavalue-list')
+        self._create_obj()
+
+        url = reverse('valuecountresult-list')
 
         # Setup request with fromula that will multiply the rasterlayer by itself
-        response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
-            self.rasterlayer.id,
-            self.agglayer.id,
-        ))
-        response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
-            self.rasterlayer.id,
-            self.agglayer.id,
-        ))
+        response = self.client.get(url + '?aggregationarea__aggregationlayer={0}'.format(self.agglayer.id))
+        result = json.loads(response.content.strip().decode())
 
-        count = len(json.loads(response.content.strip().decode()))
-        self.assertEqual(count, self.agglayer.aggregationarea_set.count())
+        count = len(result)
+        self.assertTrue(count > 0)
+        self.assertEqual(count, ValueCountResult.objects.filter(aggregationarea=self.area).count())
 
-        response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
-            self.rasterlayer.id,
-            1234,  # Not existing agglayer id.
-        ))
-        response = self.client.get(url + '?layers=a={0}&formula=a&zoom=4&aggregationlayer={1}'.format(
-            self.rasterlayer.id,
-            1234,  # Not existing agglayer id.
-        ))
+        response = self.client.get(url + '?aggregationarea__aggregationlayer=1234')  # Not existing agglayer id.
         count = len(json.loads(response.content.strip().decode()))
         self.assertEqual(0, count)
 
     def test_aggregation_null_values(self):
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=99*(a==NULL)%2B2*(~a==2)'.format(self.rasterlayer.id)
-        )
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=99*(a==NULL)%2B2*(~a==2)'.format(self.rasterlayer.id)
-        )
-        self.assertEqual(response.status_code, 200)
-        result = json.loads(response.content.strip().decode())['value']
+        self.data['formula'] = '99*(a==NULL)+2*(~a==2)'
+        result = self._create_obj()['value']
 
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=99*(~a==0)'.format(self.rasterlayer.id)
-        )
-        response = self.client.get(
-            self.url + '?layers=a={0}&formula=99*(~a==0)'.format(self.rasterlayer.id)
-        )
-        self.assertEqual(response.status_code, 200)
-        result2 = json.loads(response.content.strip().decode())['value']
+        self.data['formula'] = '99*(~a==0)'
+        result2 = self._create_obj()['value']
 
         # Assert all data values are according to the formula
         self.assertEqual(self.expected['2'], result['2'])
@@ -219,19 +156,11 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertTrue(result['99'] > 0)
 
     def test_aggregation_api_count_maxzoom_parameter(self):
-        # Setup request with fromula that will multiply the rasterlayer by itself
-        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&maxzoom=3'.format(self.rasterlayer.id))
-        response = self.client.get(self.url + '?layers=a={0},b={0}&formula=a*b&maxzoom=3'.format(self.rasterlayer.id))
-        self.assertEqual(response.status_code, 200)
-
-        # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
+        self.url += '?maxzoom=3'
+        result = self._create_obj()
 
         # Value count was bounded by given zoom level
-        self.assertEqual(
-            ValueCountResult.objects.filter(aggregationarea=self.area).first().zoom,
-            3
-        )
+        self.assertEqual(result['zoom'], 3)
 
     def test_aggregation_api_count_minmaxzoom_parameter(self):
         # Create another rasterlayer with low max_zoom value.
@@ -244,16 +173,16 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
                 max_zoom=3,
                 rasterfile=self.rasterfile
             )
-        # Setup request with fromula that will multiply the rasterlayer by itself
-        response = self.client.get(self.url + '?layers=a={0},b={1}&formula=a*b&minmaxzoom'.format(self.rasterlayer.id, rasterlayer_low_res.id))
-        response = self.client.get(self.url + '?layers=a={0},b={1}&formula=a*b&minmaxzoom'.format(self.rasterlayer.id, rasterlayer_low_res.id))
-        self.assertEqual(response.status_code, 200)
 
-        # Assert result has the right aggregationarea id
-        self.assertEqual(json.loads(response.content.strip().decode())['id'], self.area.id)
+        self.url += '?minmaxzoom'
+        self.data['layer_names'] = {'a': self.rasterlayer.id, 'b': rasterlayer_low_res.id}
+        result = self._create_obj()
 
         # Value count was bounded by given zoom level
-        self.assertEqual(
-            ValueCountResult.objects.filter(aggregationarea=self.area).first().zoom,
-            3
-        )
+        self.assertEqual(result['zoom'], 3)
+
+    def test_aggregation_api_unique_constraint(self):
+        self._create_obj()
+        response = self.client.post(self.url, json.dumps(self.data), format='json', content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.content, b'{"detail":"This value count object already exists."}')

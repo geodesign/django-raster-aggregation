@@ -168,9 +168,6 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True, 
     )
 
     for area in obj.aggregationarea_set.all():
-        # Remove existing results
-        area.valuecountresult_set.filter(rasterlayers=rast, formula=formula, layer_names=ids).delete()
-
         obj.log('Computing Value Count for area {0} and raster {1}'.format(area.id, rast.id))
 
         try:
@@ -183,6 +180,8 @@ def compute_value_count_for_aggregation_layer(obj, layer_id, compute_area=True, 
                 units='acres' if compute_area else '',
                 grouping=grouping
             )
+            if created:
+                result.rasterlayers.add(layer_id)
             compute_single_value_count_result.delay(result.id)
         except:
             obj.log(

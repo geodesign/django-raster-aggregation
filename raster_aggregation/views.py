@@ -1,15 +1,19 @@
 from __future__ import unicode_literals
 
+from raster.models import RasterLayer
 from rest_framework import filters, viewsets
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework_extensions.cache.decorators import cache_response
 from rest_framework_gis.filters import InBBOXFilter
 
-from raster_aggregation.exceptions import MissingQueryParameter
-from raster_aggregation.models import AggregationArea, AggregationLayer
+from django.db import IntegrityError
+from raster_aggregation.exceptions import DuplicateError
+from raster_aggregation.models import AggregationArea, AggregationLayer, ValueCountResult
 from raster_aggregation.serializers import (
-    AggregationAreaGeoSerializer, AggregationAreaSimplifiedSerializer, AggregationAreaValueSerializer,
-    AggregationLayerSerializer
+    AggregationAreaGeoSerializer, AggregationAreaSimplifiedSerializer, AggregationLayerSerializer,
+    ValueCountResultSerializer
 )
+from raster_aggregation.tasks import compute_single_value_count_result
 
 
 class AggregationAreaViewSet(viewsets.ReadOnlyModelViewSet):
@@ -54,38 +58,53 @@ class AggregationAreaViewSet(viewsets.ReadOnlyModelViewSet):
         return '|'.join(cache_key_data)
 
 
-class AggregationAreaValueViewSet(viewsets.ReadOnlyModelViewSet):
+class ValueCountResultViewSet(RetrieveModelMixin,
+                              ListModelMixin,
+                              CreateModelMixin,
+                              DestroyModelMixin,
+                              viewsets.GenericViewSet):
     """
     Regular aggregation Area model view endpoint.
     """
-    serializer_class = AggregationAreaValueSerializer
+    serializer_class = ValueCountResultSerializer
     filter_backends = (filters.DjangoFilterBackend, )
-    filter_fields = ('aggregationlayer', )
-
-    def initial(self, request, *args, **kwargs):
-        """
-        Look for required request query parameters.
-        """
-        if 'formula' not in request.GET:
-            raise MissingQueryParameter(detail='Missing query parameter: formula')
-        elif 'layers' not in request.GET:
-            raise MissingQueryParameter(detail='Missing query parameter: layers')
-
-        return super(AggregationAreaValueViewSet, self).initial(request, *args, **kwargs)
-
-    def get_ids(self):
-        ids = self.request.query_params.get('ids')
-        if ids:
-            return {idx.split('=')[0]: idx.split('=')[1] for idx in ids}
-        else:
-            return {}
+    filter_fields = ('aggregationarea__aggregationlayer', )
 
     def get_queryset(self):
-        qs = AggregationArea.objects.all()
-        ids = self.get_ids()
-        if ids:
-            qs = qs.filter(id__in=ids.values())
-        return qs
+        return ValueCountResult.objects.all()
+
+    def perform_create(self, serializer):
+        # Get list of rasterlayers based on layer names dict.
+        rasterlayers = [RasterLayer.objects.get(id=pk) for pk in serializer.validated_data.get('layer_names').values()]
+
+        # Get zoom level, the serializer has a default to trick the validation. The
+        # unique constraints on the model disable the required=False argument.
+        if serializer.validated_data.get('zoom') != -1:
+            zoom = serializer.validated_data.get('zoom')
+        else:
+            # Compute zoom if not provided. Work at the resolution of the
+            # input layer with the highest zoom level by default, or the
+            # lowest one if requested.
+            zlevels = [rst.metadata.max_zoom for rst in rasterlayers]
+            if 'minmaxzoom' in self.request.GET:
+                # Get the minimum of maxzoom levels
+                zoom = min(zlevels)
+            elif 'maxzoom' in self.request.GET:
+                # Limit maximum zoom level
+                maxzoom = int(self.request.GET.get('maxzoom'))
+                zoom = min(max(zlevels), maxzoom)
+            else:
+                # Compute at the maximum maxzoom (resolution of highest definition layer)
+                zoom = max(zlevels)
+
+        # Create object with final zoom value.
+        try:
+            obj = serializer.save(zoom=zoom, rasterlayers=rasterlayers)
+        except IntegrityError:
+            raise DuplicateError()
+
+        # Push value count task to queue.
+        compute_single_value_count_result.delay(obj.id)
 
 
 class AggregationAreaGeoViewSet(viewsets.ReadOnlyModelViewSet):
