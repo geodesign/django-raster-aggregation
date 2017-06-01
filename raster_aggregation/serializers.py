@@ -7,13 +7,16 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from raster_aggregation.models import AggregationArea, AggregationLayer, ValueCountResult
 
 
-class AggregationAreaSimplifiedSerializer(serializers.ModelSerializer):
-
-    geom = serializers.SerializerMethodField()
+class AggregationAreaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AggregationArea
-        fields = ('id', 'name', 'geom')
+        fields = ('id', 'name', 'geom', 'aggregationlayer')
+
+
+class AggregationAreaSimplifiedSerializer(AggregationAreaSerializer):
+
+    geom = serializers.SerializerMethodField()
 
     def get_geom(self, obj):
         # Transform geom to WGS84
@@ -66,7 +69,12 @@ class AggregationLayerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AggregationLayer
-        fields = ('id', 'name', 'description', 'min_zoom_level', 'max_zoom_level', 'nr_of_areas')
+        fields = (
+            'id', 'name', 'description', 'min_zoom_level', 'max_zoom_level',
+            'nr_of_areas', 'shapefile', 'name_column',
+            'simplification_tolerance', 'parse_log', 'modified',
+        )
+        read_only_fields = ('nr_of_areas', 'parse_log', 'modified', )
 
     def get_nr_of_areas(self, obj):
         return obj.aggregationarea_set.count()
