@@ -8,7 +8,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-raster-aggregation',
-    version='0.1.2',
+    version='0.2',
     packages=['raster_aggregation', 'raster_aggregation.migrations'],
     include_package_data=True,
     license='BSD',
