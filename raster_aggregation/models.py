@@ -49,6 +49,37 @@ class AggregationLayer(models.Model):
         self.save()
 
 
+class AggregationLayerGroup(models.Model):
+    """
+    A set of aggregation layers to be used through the vector tile endpoint.
+    The zoom level of each layer.
+    """
+    name = models.CharField(max_length=250)
+    aggregationlayers = models.ManyToManyField(AggregationLayer, through='AggregationLayerZoomRange')
+
+    def __str__(self):
+        return self.name
+
+
+class AggregationLayerZoomRange(models.Model):
+    """
+    Zoom range through which an aggregation layer should be available for display.
+    """
+    aggregationlayergroup = models.ForeignKey(AggregationLayerGroup)
+    aggregationlayer = models.ForeignKey(AggregationLayer)
+    min_zoom = models.IntegerField()
+    max_zoom = models.IntegerField()
+
+    class Meta:
+        unique_together = ('aggregationlayergroup', 'aggregationlayer')
+
+    def __str__(self):
+        return 'Group {0} - Layer {1}'.format(
+            self.aggregationlayergroup.name,
+            self.aggregationlayer.name,
+        )
+
+
 class AggregationArea(models.Model):
     """
     Aggregation area polygons.

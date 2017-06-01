@@ -22,7 +22,7 @@ install:
   - pip install coverage==4.4.1
   - pip install coveralls
 
-script: coverage run --include="raster-aggregation/*" $(which django-admin.py) test
+script: coverage run --include="raster_aggregation/*" $(which django-admin.py) test
 
 after_success: coveralls
 
