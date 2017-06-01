@@ -129,9 +129,9 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
     def test_filter_by_layer(self):
         self._create_obj()
 
+        # Valuecountresult filtering.
         url = reverse('valuecountresult-list')
 
-        # Setup request with fromula that will multiply the rasterlayer by itself
         response = self.client.get(url + '?aggregationarea__aggregationlayer={0}'.format(self.agglayer.id))
         result = json.loads(response.content.strip().decode())
 
@@ -140,6 +140,19 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(count, ValueCountResult.objects.filter(aggregationarea=self.area).count())
 
         response = self.client.get(url + '?aggregationarea__aggregationlayer=1234')  # Not existing agglayer id.
+        count = len(json.loads(response.content.strip().decode()))
+        self.assertEqual(0, count)
+
+        # Aggregationarea filtering.
+        url = reverse('aggregationarea-list')
+        response = self.client.get(url + '?aggregationlayer={0}'.format(self.agglayer.id))
+        result = json.loads(response.content.strip().decode())
+
+        count = len(result)
+        self.assertTrue(count > 0)
+        self.assertEqual(count, AggregationArea.objects.filter(aggregationlayer=self.agglayer).count())
+
+        response = self.client.get(url + '?aggregationlayer=1234')  # Not existing agglayer id.
         count = len(json.loads(response.content.strip().decode()))
         self.assertEqual(0, count)
 
@@ -185,4 +198,4 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self._create_obj()
         response = self.client.post(self.url, json.dumps(self.data), format='json', content_type='application/json')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.content, b'{"detail":"This value count object already exists."}')
+        self.assertEqual(response.content, b'{"detail":"A value count object with this properties already exists."}')

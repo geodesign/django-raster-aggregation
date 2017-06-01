@@ -10,4 +10,4 @@ class MissingQueryParameter(APIException):
 
 class DuplicateError(APIException):
     status_code = 400
-    default_detail = 'This value count object already exists.'
+    default_detail = 'A value count object with this properties already exists.'

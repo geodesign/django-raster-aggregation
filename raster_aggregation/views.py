@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from raster.models import RasterLayer
 from rest_framework import filters, viewsets
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin
-from rest_framework_extensions.cache.decorators import cache_response
 from rest_framework_gis.filters import InBBOXFilter
 
 from django.db import IntegrityError
@@ -16,46 +15,20 @@ from raster_aggregation.serializers import (
 from raster_aggregation.tasks import compute_single_value_count_result
 
 
-class AggregationAreaViewSet(viewsets.ReadOnlyModelViewSet):
+class AggregationLayerViewSet(viewsets.ModelViewSet):
+
+    queryset = AggregationLayer.objects.all()
+    serializer_class = AggregationLayerSerializer
+
+
+class AggregationAreaViewSet(viewsets.ModelViewSet):
     """
     Regular aggregation Area model view endpoint.
     """
+    queryset = AggregationArea.objects.all()
     serializer_class = AggregationAreaSimplifiedSerializer
     filter_backends = (filters.DjangoFilterBackend, )
     filter_fields = ('aggregationlayer', )
-
-    def get_queryset(self):
-        qs = AggregationArea.objects.all()
-        ids = self.request.query_params.get('ids')
-        if ids:
-            qs = qs.filter(id__in=ids.split(','))
-        return qs
-
-    @cache_response(key_func='calculate_cache_key')
-    def list(self, request, *args, **kwargs):
-        """
-        List method wrapped with caching decorator.
-        """
-        return super(AggregationAreaViewSet, self).list(request, *args, **kwargs)
-
-    def calculate_cache_key(self, view_instance, view_method, request, *args, **kwargs):
-        """
-        Creates the cache key based on query parameters and change dates from
-        related objects.
-        """
-        # Add ids to cache key data
-        cache_key_data = [
-            request.GET.get('ids', '')
-        ]
-
-        # Add aggregationlayer id and modification date
-        agglayer_id = request.GET.get('aggregationlayer', '')
-        if agglayer_id:
-            modified = AggregationLayer.objects.get(id=agglayer_id).modified
-            modified = str(modified).replace(' ', '-')
-            cache_key_data.append('-'.join(['agg', agglayer_id, modified]))
-
-        return '|'.join(cache_key_data)
 
 
 class ValueCountResultViewSet(RetrieveModelMixin,
@@ -66,12 +39,10 @@ class ValueCountResultViewSet(RetrieveModelMixin,
     """
     Regular aggregation Area model view endpoint.
     """
+    queryset = ValueCountResult.objects.all()
     serializer_class = ValueCountResultSerializer
     filter_backends = (filters.DjangoFilterBackend, )
     filter_fields = ('aggregationarea__aggregationlayer', )
-
-    def get_queryset(self):
-        return ValueCountResult.objects.all()
 
     def perform_create(self, serializer):
         # Get list of rasterlayers based on layer names dict.
@@ -125,11 +96,3 @@ class AggregationAreaGeoViewSet(viewsets.ReadOnlyModelViewSet):
         if zoom:
             queryset = queryset.filter(aggregationlayer__min_zoom_level__lte=zoom, aggregationlayer__max_zoom_level__gte=zoom)
         return queryset
-
-
-class AggregationLayerViewSet(viewsets.ReadOnlyModelViewSet):
-
-    serializer_class = AggregationLayerSerializer
-
-    def get_queryset(self):
-        return AggregationLayer.objects.all()

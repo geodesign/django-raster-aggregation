@@ -22,12 +22,12 @@ class RasterAggregationInvalidationTests(RasterAggregationTestCase):
     def test_invalidation_from_reparsing_rasterlayer(self):
         self.assertEqual(ValueCountResult.objects.all().count(), 2)
 
+        # Clear parse log to trigger reparsing of rasterlayer.
         with self.settings(MEDIA_ROOT=self.media_root):
-            # Clear parse log to trigger reparsing of rasterlayer
             self.rasterlayer.parsestatus.reset()
             self.rasterlayer.save()
 
-        # Assert that value count results have been deleted
+        # Assert that value count results have been deleted.
         self.assertEqual(ValueCountResult.objects.all().count(), 2)
         self.assertEqual(ValueCountResult.objects.filter(status=ValueCountResult.FINISHED).count(), 0)
         self.assertEqual(ValueCountResult.objects.filter(status=ValueCountResult.OUTDATED).count(), 2)
