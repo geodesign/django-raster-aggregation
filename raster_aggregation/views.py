@@ -53,7 +53,7 @@ class ValueCountResultViewSet(RetrieveModelMixin,
 
     def perform_create(self, serializer):
         # Get list of rasterlayers based on layer names dict.
-        rasterlayers = [RasterLayer.objects.get(id=pk) for pk in serializer.validated_data.get('layer_names').values()]
+        rasterlayers = [RasterLayer.objects.get(id=pk) for pk in set(serializer.validated_data.get('layer_names').values())]
 
         # Get zoom level, the serializer has a default to trick the validation. The
         # unique constraints on the model disable the required=False argument.
