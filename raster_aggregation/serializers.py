@@ -73,6 +73,7 @@ class AggregationLayerSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'min_zoom_level', 'max_zoom_level',
             'nr_of_areas', 'shapefile', 'name_column',
             'simplification_tolerance', 'parse_log', 'modified',
+            'aggregationareas',
         )
         read_only_fields = ('nr_of_areas', 'parse_log', 'modified', )
 
