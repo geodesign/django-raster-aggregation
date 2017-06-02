@@ -31,7 +31,6 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
 
         self.data = {
             'aggregationarea': self.area.id,
-            'rasterlayers': [self.rasterlayer.id],
             'layer_names': {'a': self.rasterlayer.id, 'b': self.rasterlayer.id},
             'formula': 'a*b',
         }
