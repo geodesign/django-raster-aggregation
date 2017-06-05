@@ -38,10 +38,10 @@ class AggregationAreaViewSet(viewsets.ModelViewSet):
     filter_fields = ('aggregationlayer', )
 
 
-class ValueCountResultViewSet(RetrieveModelMixin,
-                              ListModelMixin,
-                              CreateModelMixin,
+class ValueCountResultViewSet(CreateModelMixin,
+                              RetrieveModelMixin,
                               DestroyModelMixin,
+                              ListModelMixin,
                               viewsets.GenericViewSet):
     """
     Regular aggregation Area model view endpoint.
