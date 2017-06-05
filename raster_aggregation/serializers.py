@@ -47,6 +47,7 @@ class ValueCountResultSerializer(serializers.ModelSerializer):
     rasterlayers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     value = serializers.SerializerMethodField()
     zoom = serializers.IntegerField(default=-1)
+    status = serializers.CharField(source='get_status_display', read_only=True)
 
     class Meta:
         model = ValueCountResult
@@ -54,7 +55,7 @@ class ValueCountResultSerializer(serializers.ModelSerializer):
             'id', 'aggregationarea', 'rasterlayers', 'formula', 'layer_names',
             'zoom', 'units', 'grouping', 'value', 'created', 'status',
         )
-        read_only_fields = ('id', 'value', 'created', 'status', )
+        read_only_fields = ('id', 'value', 'created', 'status', 'rasterlayers',)
 
     def get_value(self, obj):
         """
