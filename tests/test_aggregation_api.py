@@ -42,7 +42,7 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         result = json.loads(response.content.strip().decode())
         # Async result has not been created, but scheduled.
         self.assertEqual(result['value'], {})
-        self.assertEqual(result['status'], ValueCountResult.SCHEDULED)
+        self.assertEqual(result['status'], 'Scheduled')
 
         # Get detail view to obtain value count result.
         url = reverse('valuecountresult-detail', kwargs={'pk': result['id']})
