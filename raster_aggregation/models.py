@@ -8,7 +8,7 @@ from raster.valuecount import Aggregator
 
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import HStoreField
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from raster_aggregation.utils import WEB_MERCATOR_SRID, convert_to_multipolygon
 
@@ -47,6 +47,25 @@ class AggregationLayer(models.Model):
             self.parse_log += '\n' + now + msg
 
         self.save()
+
+
+@receiver(pre_save, sender=AggregationLayer)
+def reset_parse_log_if_data_changed(sender, instance, **kwargs):
+    try:
+        obj = AggregationLayer.objects.get(pk=instance.pk)
+    except AggregationLayer.DoesNotExist:
+        pass
+    else:
+        # If the filename has changed, clear parse status to trigger re-parsing.
+        if (obj.shapefile.name != instance.shapefile.name):
+            instance.parse_log = ''
+
+
+@receiver(post_save, sender=AggregationLayer)
+def parse_aggregation_layer_if_parselog_is_empty(sender, instance, created, **kwargs):
+    from raster_aggregation.tasks import aggregation_layer_parser
+    if instance.shapefile.name and not instance.parse_log:
+        aggregation_layer_parser.delay(instance.id)
 
 
 class AggregationLayerGroup(models.Model):

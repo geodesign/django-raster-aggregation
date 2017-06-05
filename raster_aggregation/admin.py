@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from raster.models import RasterLayer
 
 from django import forms
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
@@ -33,17 +33,12 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
     actions = ['parse_shapefile_data', 'compute_value_count', ]
 
     def parse_shapefile_data(self, request, queryset):
-        if queryset.count() > 1:
-            self.message_user(request,
-                'You can only parse one file at a time, please select only one collection.',
-                level=messages.ERROR)
-        else:
-            # Send parse data command to celery
-            collection = queryset[0]
-            aggregation_layer_parser(collection.id)
-
-            self.message_user(request,
-                "Parsing shapefile asynchronously, please check the collection parse log for status")
+        for lyr in queryset.all():
+            aggregation_layer_parser.delay(lyr.id)
+            self.message_user(
+                request,
+                "Parsing shapefile asynchronously, please check the collection parse log for status",
+            )
 
     def compute_value_count(self, request, queryset):
 
