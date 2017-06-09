@@ -67,6 +67,7 @@ class ValueCountResultSerializer(serializers.ModelSerializer):
 class AggregationLayerSerializer(serializers.ModelSerializer):
 
     nr_of_areas = serializers.SerializerMethodField()
+    aggregationareas = serializers.PrimaryKeyRelatedField(many=True, read_only=True, source='aggregationarea_set')
 
     class Meta:
         model = AggregationLayer
