@@ -14,6 +14,7 @@ from django.db import IntegrityError
 from django.http import Http404, HttpResponse
 from django.views.generic import View
 from raster_aggregation.exceptions import DuplicateError
+from raster_aggregation.filters import ValueCountResultFilter
 from raster_aggregation.models import AggregationArea, AggregationLayer, AggregationLayerGroup, ValueCountResult
 from raster_aggregation.serializers import (
     AggregationAreaGeoSerializer, AggregationAreaSimplifiedSerializer, AggregationLayerSerializer,
@@ -49,7 +50,7 @@ class ValueCountResultViewSet(CreateModelMixin,
     queryset = ValueCountResult.objects.all()
     serializer_class = ValueCountResultSerializer
     filter_backends = (filters.DjangoFilterBackend, )
-    filter_fields = ('aggregationarea__aggregationlayer', )
+    filter_class = ValueCountResultFilter
 
     def perform_create(self, serializer):
         # Get list of rasterlayers based on layer names dict.
