@@ -153,6 +153,10 @@ class ValueCountResult(models.Model):
     value = HStoreField(default={})
     created = models.DateTimeField(auto_now=True)
     status = models.IntegerField(choices=STATUS, default=SCHEDULED)
+    stats_min = models.FloatField(editable=False, blank=True, null=True)
+    stats_max = models.FloatField(editable=False, blank=True, null=True)
+    stats_avg = models.FloatField(editable=False, blank=True, null=True)
+    stats_std = models.FloatField(editable=False, blank=True, null=True)
 
     class Meta:
         unique_together = (
@@ -181,6 +185,7 @@ class ValueCountResult(models.Model):
                 grouping=self.grouping,
             )
             aggregation_result = agg.value_count()
+            self.stats_min, self.stats_max, self.stats_avg, self.stats_std = agg.statistics()
 
             # Convert values to string for storage in hstore
             self.value = {k: str(v) for k, v in aggregation_result.items()}

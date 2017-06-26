@@ -48,12 +48,17 @@ class ValueCountResultSerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
     zoom = serializers.IntegerField(default=-1)
     status = serializers.CharField(source='get_status_display', read_only=True)
+    min = serializers.FloatField(source='stats_min', read_only=True)
+    max = serializers.FloatField(source='stats_max', read_only=True)
+    avg = serializers.FloatField(source='stats_avg', read_only=True)
+    std = serializers.FloatField(source='stats_std', read_only=True)
 
     class Meta:
         model = ValueCountResult
         fields = (
             'id', 'aggregationarea', 'rasterlayers', 'formula', 'layer_names',
             'zoom', 'units', 'grouping', 'value', 'created', 'status',
+            'min', 'max', 'avg', 'std',
         )
         read_only_fields = ('id', 'value', 'created', 'status', 'rasterlayers',)
 

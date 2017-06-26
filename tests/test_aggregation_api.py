@@ -62,6 +62,14 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         # Assert all data values are according to the formula
         self.assertDictEqual(result['value'], expected)
 
+    def test_aggregation_api_stats(self):
+        result = self._create_obj()
+
+        self.assertEqual(result['min'], 1)
+        self.assertEqual(result['max'], 225)
+        self.assertEqual(result['avg'], 27.4032615692726)
+        self.assertEqual(result['std'], 39.3484035359834)
+
     def test_aggregation_api_count_explicit_zoom(self):
         self.data['zoom'] = 11
         result = self._create_obj()
