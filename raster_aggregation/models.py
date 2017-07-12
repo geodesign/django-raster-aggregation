@@ -107,7 +107,6 @@ class AggregationArea(models.Model):
     aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True, on_delete=models.CASCADE)
     geom = models.MultiPolygonField(srid=WEB_MERCATOR_SRID)
     geom_simplified = models.MultiPolygonField(srid=WEB_MERCATOR_SRID, blank=True, null=True)
-    objects = models.GeoManager()
 
     def __str__(self):
         return "{lyr} - {name}".format(lyr=self.aggregationlayer.name, name=self.name)
