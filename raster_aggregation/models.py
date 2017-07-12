@@ -84,8 +84,8 @@ class AggregationLayerZoomRange(models.Model):
     """
     Zoom range through which an aggregation layer should be available for display.
     """
-    aggregationlayergroup = models.ForeignKey(AggregationLayerGroup)
-    aggregationlayer = models.ForeignKey(AggregationLayer)
+    aggregationlayergroup = models.ForeignKey(AggregationLayerGroup, on_delete=models.CASCADE)
+    aggregationlayer = models.ForeignKey(AggregationLayer, on_delete=models.CASCADE)
     min_zoom = models.IntegerField()
     max_zoom = models.IntegerField()
 
@@ -104,7 +104,7 @@ class AggregationArea(models.Model):
     Aggregation area polygons.
     """
     name = models.TextField(blank=True, null=True)
-    aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True)
+    aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True, on_delete=models.CASCADE)
     geom = models.MultiPolygonField(srid=WEB_MERCATOR_SRID)
     geom_simplified = models.MultiPolygonField(srid=WEB_MERCATOR_SRID, blank=True, null=True)
     objects = models.GeoManager()
@@ -143,7 +143,7 @@ class ValueCountResult(models.Model):
         (OUTDATED, 'Outdated'),
     )
 
-    aggregationarea = models.ForeignKey(AggregationArea)
+    aggregationarea = models.ForeignKey(AggregationArea, on_delete=models.CASCADE)
     rasterlayers = models.ManyToManyField(RasterLayer)
     formula = models.TextField()
     layer_names = HStoreField()
