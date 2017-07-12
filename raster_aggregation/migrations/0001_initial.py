@@ -40,13 +40,13 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('value', models.TextField()),
-                ('aggregationarea', models.ForeignKey(to='raster_aggregation.AggregationArea')),
-                ('rasterlayer', models.ForeignKey(to='raster.RasterLayer')),
+                ('aggregationarea', models.ForeignKey(to='raster_aggregation.AggregationArea', on_delete=models.CASCADE)),
+                ('rasterlayer', models.ForeignKey(to='raster.RasterLayer', on_delete=models.CASCADE)),
             ],
         ),
         migrations.AddField(
             model_name='aggregationarea',
             name='aggregationlayer',
-            field=models.ForeignKey(blank=True, to='raster_aggregation.AggregationLayer', null=True),
+            field=models.ForeignKey(blank=True, to='raster_aggregation.AggregationLayer', null=True, on_delete=models.CASCADE),
         ),
     ]
