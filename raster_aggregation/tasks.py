@@ -73,6 +73,10 @@ def aggregation_layer_parser(agglayer_id):
         )
         return
 
+    # Track all fields
+    agglayer.fields = {name: field.__name__ for name, field in zip(lyr.fields, lyr.field_types)}
+    agglayer.save()
+
     # Setup transformation to default ref system
     try:
         ct = CoordTransform(lyr.srs, SpatialReference(WEB_MERCATOR_SRID))
@@ -124,18 +128,26 @@ def aggregation_layer_parser(agglayer_id):
             )
             continue
 
+        # Construct attribute dict.
+        attrs = {field.name: field.value for field in feat}
+
         # Create aggregation area
         try:
             agglayer.aggregationarea_set.create(
                 name=feat.get(agglayer.name_column),
                 aggregationlayer=agglayer,
-                geom=geom
+                geom=geom,
+                attributes=attrs,
             )
         except:
             agglayer.log(
                 'Warning: Failed to create AggregationArea '
                 'for feature fid {0}\n'.format(feat.fid)
             )
+
+    # Count the number of shapes in this layer.
+    agglayer.nr_of_areas = agglayer.aggregationarea_set.all().count()
+    agglayer.save()
 
     agglayer.log('Finished parsing Aggregation Layer {0}'.format(agglayer.id))
 

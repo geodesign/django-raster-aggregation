@@ -21,10 +21,12 @@ class AggregationLayer(models.Model):
     description = models.TextField(blank=True, null=True)
     shapefile = models.FileField(upload_to='shapefiles/aggregationlayers')
     name_column = models.CharField(max_length=10)
+    fields = HStoreField(blank=True, default={})
     min_zoom_level = models.IntegerField(default=0)
     max_zoom_level = models.IntegerField(default=18)
     simplification_tolerance = models.FloatField(default=0.01)
     parse_log = models.TextField(blank=True, null=True, default='')
+    nr_of_areas = models.IntegerField(default=0)
     modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -105,6 +107,7 @@ class AggregationArea(models.Model):
     """
     name = models.TextField(blank=True, null=True)
     aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True, on_delete=models.CASCADE)
+    attributes = HStoreField(default={})
     geom = models.MultiPolygonField(srid=WEB_MERCATOR_SRID)
     geom_simplified = models.MultiPolygonField(srid=WEB_MERCATOR_SRID, blank=True, null=True)
 
