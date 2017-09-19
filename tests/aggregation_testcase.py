@@ -48,7 +48,7 @@ class RasterAggregationTestCase(TestCase):
 
             # Create aggregation layer
             self.agglayer = AggregationLayer.objects.create(
-                name='abc',
+                name='My Aggregation Layer',
                 name_column='name',
                 shapefile=shapefile
             )

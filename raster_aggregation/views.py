@@ -8,14 +8,14 @@ from rest_framework import filters, viewsets
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework_gis.filters import InBBOXFilter
 
-from django.contrib.gis.db.models.functions import Intersection, Transform
+from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import OGRGeometry
 from django.db import IntegrityError
-from django.http import Http404, HttpResponse
-from django.views.generic import View
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from raster_aggregation.exceptions import DuplicateError
 from raster_aggregation.filters import ValueCountResultFilter
-from raster_aggregation.models import AggregationArea, AggregationLayer, AggregationLayerGroup, ValueCountResult
+from raster_aggregation.models import AggregationArea, AggregationLayer, ValueCountResult
 from raster_aggregation.serializers import (
     AggregationAreaGeoSerializer, AggregationAreaSimplifiedSerializer, AggregationLayerSerializer,
     ValueCountResultSerializer
@@ -106,40 +106,56 @@ class AggregationAreaGeoViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class VectorTilesView(View):
+class AggregationLayerVectorTilesViewSet(ListModelMixin, viewsets.GenericViewSet):
 
-    def get(self, request, layergroup, x, y, z, response_format, *args, **kwargs):
+    queryset = AggregationLayer.objects.all()
+
+    def list(self, request, aggregationlayer, x, y, z, frmt, *args, **kwargs):
         # Select which agglayer to use for this tile.
-        grp = AggregationLayerGroup.objects.get(id=layergroup)
-        layerzoomrange = grp.aggregationlayerzoomrange_set.filter(
-            min_zoom__lte=z,
-            max_zoom__gte=z,
-        ).first()
-        if not layerzoomrange:
-            raise Http404('No layer found for this zoom level')
-        lyr = layerzoomrange.aggregationlayer
+        lyr = get_object_or_404(AggregationLayer, pk=aggregationlayer)
 
-        # Compute intersection between the tile boundary and the layer geometries.
-        bounds = tile_bounds(int(x), int(y), int(z))
-        bounds = OGRGeometry.from_bbox(bounds)
+        # Compute tile boundary coorner coordinates.
+        bounds_coords = tile_bounds(int(x), int(y), int(z))
+
+        # Create a geometry with a 1% buffer around the tile. This buffered
+        # tile boundary will be used for clipping the geometry. The overflow
+        # will visually dissolve the polygons on the frontend visualization.
+        bounds = OGRGeometry.from_bbox(bounds_coords)
         bounds.srid = WEB_MERCATOR_SRID
         bounds = bounds.geos
+        bounds_buffer = bounds.buffer((bounds_coords[2] - bounds_coords[0]) / 100)
+
+        # Get the intersection of the aggregation areas and the tile boundary.
+        # use buffer to clip the aggregation area.
         result = AggregationArea.objects.filter(
             aggregationlayer=lyr,
             geom__intersects=bounds,
         ).annotate(
-            intersection=Transform(Intersection('geom', bounds), WEB_MERCATOR_SRID)
+            intersection=Intersection('geom', bounds_buffer)
         ).only('id', 'name')
 
         # Render intersection as vector tile in two different available formats.
-        if response_format == '.json':
+        if frmt == 'json':
             result = ['{{"geometry": {0}, "properties": {{"id": {1}, "name": "{2}"}}}}'.format(dat.intersection.geojson, dat.id, dat.name) for dat in result]
             result = ','.join(result)
             result = '{"type": "FeatureCollection","features":[' + result + ']}'
             return HttpResponse(result, content_type="application/json")
-        elif response_format == '.pbf':
-            result = [{"geometry": bytes(dat.intersection.wkb), "properties": {"id": dat.id, "name": dat.name}} for dat in result]
-            result = mapbox_vector_tile.encode({"name": "testlayer", "features": result})
-            return HttpResponse(result, content_type="application/octet-stream")
-        else:
-            raise Http404('Unknown response format {0}'.format(response_format))
+        elif frmt == 'pbf':
+            features = [
+                {
+                    "geometry": bytes(dat.intersection.wkb),
+                    "properties": {
+                        "id": dat.id,
+                        "name": dat.name,
+                        "attributes": dat.attributes,
+                    },
+                } for dat in result
+            ]
+            data = [
+                {
+                    "name": lyr.name,
+                    "features": features,
+                },
+            ]
+            vtile = mapbox_vector_tile.encode(data, quantize_bounds=bounds_coords)
+            return HttpResponse(vtile, content_type='application/x-protobuf')
