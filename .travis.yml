@@ -8,13 +8,15 @@ python:
 sudo: true
 
 addons:
-  postgresql: "9.6"
+  postgresql: 9.6
+  apt:
+    packages:
+    - postgresql-9.6-postgis-2.3
 
 env:
     - DB_NAME=raster_aggregation_test PYTHONPATH=$PYTHONPATH:$PWD DJANGO_SETTINGS_MODULE=tests.testproj.settings
 
 before_script:
-  - sudo apt-get install -y -q postgresql-9.6-postgis-2.3 postgis
   - psql -c 'create database raster_aggregation_test' -U postgres
   - psql -c 'create extension postgis' -U postgres -d raster_aggregation_test
 
