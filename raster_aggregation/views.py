@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
 
 import mapbox_vector_tile
+from django_filters.rest_framework import DjangoFilterBackend
 from raster.models import RasterLayer
 from raster.tiles.const import WEB_MERCATOR_SRID
 from raster.tiles.utils import tile_bounds
-from rest_framework import filters, viewsets
+from rest_framework import viewsets
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework_gis.filters import InBBOXFilter
 
@@ -35,7 +36,7 @@ class AggregationAreaViewSet(viewsets.ModelViewSet):
     """
     queryset = AggregationArea.objects.all()
     serializer_class = AggregationAreaSimplifiedSerializer
-    filter_backends = (filters.DjangoFilterBackend, )
+    filter_backends = (DjangoFilterBackend, )
     filter_fields = ('aggregationlayer', )
 
 
@@ -49,7 +50,7 @@ class ValueCountResultViewSet(CreateModelMixin,
     """
     queryset = ValueCountResult.objects.all()
     serializer_class = ValueCountResultSerializer
-    filter_backends = (filters.DjangoFilterBackend, )
+    filter_backends = (DjangoFilterBackend, )
     filter_class = ValueCountResultFilter
 
     def perform_create(self, serializer):
@@ -96,7 +97,7 @@ class AggregationAreaGeoViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = AggregationAreaGeoSerializer
     allowed_methods = ('GET', )
-    filter_backends = (InBBOXFilter, filters.DjangoFilterBackend, )
+    filter_backends = (InBBOXFilter, DjangoFilterBackend, )
     filter_fields = ('name', 'aggregationlayer', )
     bbox_filter_field = 'geom'
     paginate_by = None
