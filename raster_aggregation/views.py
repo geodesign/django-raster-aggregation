@@ -83,7 +83,11 @@ class ValueCountResultViewSet(CreateModelMixin,
             raise DuplicateError()
 
         # Push value count task to queue.
-        compute_single_value_count_result.delay(obj.id)
+        if 'synchronous' in self.request.GET:
+            compute_single_value_count_result(obj.id)
+            obj.refresh_from_db()
+        else:
+            compute_single_value_count_result.delay(obj.id)
 
 
 class AggregationAreaGeoViewSet(viewsets.ReadOnlyModelViewSet):

@@ -40,9 +40,12 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         response = self.client.post(self.url, json.dumps(self.data), format='json', content_type='application/json')
         self.assertEqual(response.status_code, 201)
         result = json.loads(response.content.strip().decode())
-        # Async result has not been created, but scheduled.
-        self.assertEqual(result['value'], {})
-        self.assertEqual(result['status'], 'Scheduled')
+        if 'synchronous' in self.url:
+            self.assertEqual(result['status'], 'Finished')
+        else:
+            # Async result has not been created, but scheduled.
+            self.assertEqual(result['value'], {})
+            self.assertEqual(result['status'], 'Scheduled')
 
         # Get detail view to obtain value count result.
         url = reverse('valuecountresult-detail', kwargs={'pk': result['id']})
@@ -206,3 +209,13 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         response = self.client.post(self.url, json.dumps(self.data), format='json', content_type='application/json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content, b'{"detail":"A value count object with this properties already exists."}')
+
+    def test_aggregation_api_synchronous(self):
+        self.url += '?synchronous'
+        result = self._create_obj()
+
+        # Compute expected values (same counts, but squared keys due to formula)
+        expected = {str(int(k) ** 2): v for k, v in self.expected.items()}
+
+        # Assert all data values are according to the formula
+        self.assertDictEqual(result['value'], expected)
