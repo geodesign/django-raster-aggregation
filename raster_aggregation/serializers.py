@@ -11,7 +11,7 @@ class AggregationAreaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AggregationArea
-        fields = ('id', 'name', 'geom', 'aggregationlayer')
+        fields = ('id', 'name', 'geom', 'aggregationlayer', 'attributes', )
 
 
 class AggregationAreaSimplifiedSerializer(AggregationAreaSerializer):
