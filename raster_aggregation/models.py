@@ -160,6 +160,10 @@ class ValueCountResult(models.Model):
     stats_avg = models.FloatField(editable=False, blank=True, null=True)
     stats_std = models.FloatField(editable=False, blank=True, null=True)
 
+    stats_cumsum_t0 = models.FloatField(editable=False, blank=True, null=True, help_text='Nr of pixels counted.')
+    stats_cumsum_t1 = models.FloatField(editable=False, blank=True, null=True, help_text='Sum of pixel values.')
+    stats_cumsum_t2 = models.FloatField(editable=False, blank=True, null=True, help_text='Sum of squares of pixel values.')
+
     class Meta:
         unique_together = (
             'aggregationarea', 'formula', 'layer_names', 'zoom', 'units', 'grouping',
@@ -188,6 +192,12 @@ class ValueCountResult(models.Model):
             )
             aggregation_result = agg.value_count()
             self.stats_min, self.stats_max, self.stats_avg, self.stats_std = agg.statistics()
+
+            # Track cumulative data to be able to generalize stats over
+            # multiple aggregation areas.
+            self.stats_cumsum_t0 = agg._stats_t0
+            self.stats_cumsum_t1 = agg._stats_t1
+            self.stats_cumsum_t2 = agg._stats_t2
 
             # Convert values to string for storage in hstore
             self.value = {k: str(v) for k, v in aggregation_result.items()}
