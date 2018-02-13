@@ -28,6 +28,7 @@ class AggregationLayer(models.Model):
     parse_log = models.TextField(blank=True, null=True, default='')
     nr_of_areas = models.IntegerField(default=0)
     modified = models.DateTimeField(auto_now=True)
+    extent = models.PolygonField(srid=WEB_MERCATOR_SRID, null=True)
 
     def __str__(self):
         return '{name} ({count} divisions)'.format(

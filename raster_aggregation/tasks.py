@@ -9,7 +9,9 @@ import zipfile
 from celery import task
 from raster.models import RasterLayer
 
+from django.contrib.gis.db.models import Extent
 from django.contrib.gis.gdal import CoordTransform, DataSource, SpatialReference
+from django.contrib.gis.geos import Polygon
 from raster_aggregation.models import AggregationLayer, ValueCountResult
 from raster_aggregation.utils import WEB_MERCATOR_SRID, convert_to_multipolygon
 
@@ -145,8 +147,10 @@ def aggregation_layer_parser(agglayer_id):
                 'for feature fid {0}\n'.format(feat.fid)
             )
 
-    # Count the number of shapes in this layer.
+    # Count the number of shapes and extent of this layer.
     agglayer.nr_of_areas = agglayer.aggregationarea_set.all().count()
+    extent = agglayer.aggregationarea_set.aggregate(Extent('geom'))['geom__extent']
+    agglayer.extent = Polygon.from_bbox(extent)
     agglayer.save()
 
     agglayer.log('Finished parsing Aggregation Layer {0}'.format(agglayer.id))
