@@ -5,7 +5,7 @@ from raster.tiles.const import WEB_MERCATOR_SRID
 from raster.tiles.utils import tile_bounds
 
 from django.contrib.gis.gdal import OGRGeometry
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from .aggregation_testcase import RasterAggregationTestCase
 

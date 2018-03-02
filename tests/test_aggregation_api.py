@@ -4,8 +4,8 @@ import json
 
 from raster.models import RasterLayer
 
-from django.core.urlresolvers import reverse_lazy as reverse
 from django.test import Client
+from django.urls import reverse_lazy as reverse
 from raster_aggregation.models import AggregationArea, ValueCountResult
 
 from .aggregation_testcase import RasterAggregationTestCase

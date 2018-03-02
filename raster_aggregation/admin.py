@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from raster.models import RasterLayer
 
 from django import forms
-from django.contrib import admin
+from django.contrib.gis import admin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
