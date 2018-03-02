@@ -94,7 +94,7 @@ class AggregationLayerGroupAdmin(admin.ModelAdmin):
     exclude = ['aggregationlayers']
 
 
-admin.site.register(AggregationArea)
+admin.site.register(AggregationArea, admin.OSMGeoAdmin)
 admin.site.register(ValueCountResult, ValueCountResultAdmin)
 admin.site.register(AggregationLayer, ComputeActivityAggregatesModelAdmin)
 admin.site.register(AggregationLayerGroup, AggregationLayerGroupAdmin)
