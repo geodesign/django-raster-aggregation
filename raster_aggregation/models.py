@@ -26,9 +26,9 @@ class AggregationLayer(models.Model):
     max_zoom_level = models.IntegerField(default=18)
     simplification_tolerance = models.FloatField(default=0.01)
     parse_log = models.TextField(blank=True, null=True, default='')
-    nr_of_areas = models.IntegerField(default=0)
+    extent = models.PolygonField(srid=WEB_MERCATOR_SRID, editable=False, null=True)
+    nr_of_areas = models.IntegerField(default=0, editable=False)
     modified = models.DateTimeField(auto_now=True)
-    extent = models.PolygonField(srid=WEB_MERCATOR_SRID, null=True)
 
     def __str__(self):
         return '{name} ({count} divisions)'.format(
