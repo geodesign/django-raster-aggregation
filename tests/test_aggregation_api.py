@@ -72,6 +72,9 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(result['max'], 225)
         self.assertEqual(result['avg'], 27.4032615692726)
         self.assertEqual(result['std'], 39.3484035359834)
+        self.assertEqual(result['pcount'], 41943)
+        self.assertEqual(result['psum'], 1149375)
+        self.assertEqual(result['psumsq'], 96436839)
 
     def test_aggregation_api_count_explicit_zoom(self):
         self.data['zoom'] = 11
