@@ -21,7 +21,7 @@ class AggregationLayer(models.Model):
     description = models.TextField(blank=True, null=True)
     shapefile = models.FileField(upload_to='shapefiles/aggregationlayers', blank=True, null=True)
     name_column = models.CharField(max_length=10, default='', blank=True)
-    fields = HStoreField(blank=True, default={})
+    fields = HStoreField(blank=True, default=dict)
     min_zoom_level = models.IntegerField(default=0)
     max_zoom_level = models.IntegerField(default=18)
     simplification_tolerance = models.FloatField(default=0.01)
@@ -108,7 +108,7 @@ class AggregationArea(models.Model):
     """
     name = models.TextField(blank=True, null=True)
     aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True, on_delete=models.CASCADE)
-    attributes = HStoreField(default={})
+    attributes = HStoreField(default=dict)
     geom = models.MultiPolygonField(srid=WEB_MERCATOR_SRID)
     geom_simplified = models.MultiPolygonField(srid=WEB_MERCATOR_SRID, blank=True, null=True)
 
@@ -153,7 +153,7 @@ class ValueCountResult(models.Model):
     zoom = models.PositiveSmallIntegerField()
     units = models.TextField(default='')
     grouping = models.TextField(default='auto')
-    value = HStoreField(default={})
+    value = HStoreField(default=dict)
     created = models.DateTimeField(auto_now=True)
     status = models.IntegerField(choices=STATUS, default=SCHEDULED)
     stats_min = models.FloatField(editable=False, blank=True, null=True)
