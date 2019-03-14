@@ -153,10 +153,10 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(count, ValueCountResult.objects.filter(aggregationarea=self.area).count())
 
         response = self.client.get(url + '?aggregationarea__aggregationlayer=1234')  # Not existing agglayer id.
-        count = len(json.loads(response.content.strip().decode()))
-        self.assertEqual(0, count)
+        result = json.loads(response.content.strip().decode())
+        self.assertDictEqual(result, {'aggregationarea__aggregationlayer': ['Select a valid choice. That choice is not one of the available choices.']})
 
-        # Aggregationarea filtering.
+        # Aggregationrea filtering.
         url = reverse('aggregationarea-list')
         response = self.client.get(url + '?aggregationlayer={0}'.format(self.agglayer.id))
         result = json.loads(response.content.strip().decode())
@@ -166,8 +166,8 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
         self.assertEqual(count, AggregationArea.objects.filter(aggregationlayer=self.agglayer).count())
 
         response = self.client.get(url + '?aggregationlayer=1234')  # Not existing agglayer id.
-        count = len(json.loads(response.content.strip().decode()))
-        self.assertEqual(0, count)
+        result = json.loads(response.content.strip().decode())
+        self.assertDictEqual(result, {'aggregationlayer': ['Select a valid choice. That choice is not one of the available choices.']})
 
     def test_aggregation_null_values(self):
         self.data['formula'] = '99*(a==NULL)+2*(~a==2)'
