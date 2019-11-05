@@ -31,3 +31,18 @@ class RasterAggregationTaskTests(RasterAggregationTestCase):
 
         # Assert value counts are correct
         self.assertDictEqual(result, self.expected)
+
+    def test_value_count_results_with_hist_range(self):
+        vc = ValueCountResult.objects.get(aggregationarea__name='Coverall')
+        self.assertEqual(vc.stats_min, 1)
+        self.assertEqual(vc.stats_max, 15)
+        self.assertAlmostEqual(vc.stats_avg, 4.65901342)
+
+        vc.range_min = 1.5
+        vc.range_max = 8
+        vc.populate()
+        vc.refresh_from_db()
+
+        self.assertEqual(vc.stats_min, 2)
+        self.assertEqual(vc.stats_max, 8)
+        self.assertAlmostEqual(vc.stats_avg, 4.03124746)

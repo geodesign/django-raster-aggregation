@@ -153,6 +153,9 @@ class ValueCountResult(models.Model):
     zoom = models.PositiveSmallIntegerField()
     units = models.TextField(default='')
     grouping = models.TextField(default='auto')
+    range_min = models.FloatField(blank=True, null=True, help_text='Lower cutoff limit for valuecounts. Only used if upper cutoff is also specified.')
+    range_max = models.FloatField(blank=True, null=True, help_text='Upper cutoff limit for valuecounts. Only used if lower cutoff is also specified.')
+
     value = HStoreField(default=dict)
     created = models.DateTimeField(auto_now=True)
     status = models.IntegerField(choices=STATUS, default=SCHEDULED)
@@ -181,8 +184,14 @@ class ValueCountResult(models.Model):
         self.status = self.COMPUTING
         self.save()
 
+        # Compute range for valuecounts if provided.
+        if self.range_min is not None and self.range_max is not None:
+            hist_range = (self.range_min, self.range_max)
+        else:
+            hist_range = None
+
         try:
-            # Compute aggregate result
+            # Compute aggregate result.
             agg = Aggregator(
                 layer_dict=self.layer_names,
                 formula=self.formula,
@@ -190,6 +199,7 @@ class ValueCountResult(models.Model):
                 geom=self.aggregationarea.geom,
                 acres=self.units.lower() == 'acres',
                 grouping=self.grouping,
+                hist_range=hist_range,
             )
             aggregation_result = agg.value_count()
             self.stats_min, self.stats_max, self.stats_avg, self.stats_std = agg.statistics()
