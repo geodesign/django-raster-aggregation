@@ -222,3 +222,18 @@ class RasterAggregationApiTests(RasterAggregationTestCase):
 
         # Assert all data values are according to the formula
         self.assertDictEqual(result['value'], expected)
+
+    def test_aggregation_layer_list(self):
+        url = reverse('aggregationlayer-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content.strip().decode())
+        self.assertEqual(result[0]['id'], self.agglayer.id)
+
+    def test_aggregation_layer_create_without_shapefile(self):
+        url = reverse('aggregationlayer-list')
+        data = {'name': 'Test api creation', 'description': 'test description'}
+        response = self.client.post(url, json.dumps(data), format='json', content_type='application/json')
+        self.assertEqual(response.status_code, 201)
+        result = json.loads(response.content.strip().decode())
+        self.assertEqual(result['name'], 'Test api creation')
