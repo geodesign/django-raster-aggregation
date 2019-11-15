@@ -76,6 +76,8 @@ class AggregationLayerSerializer(serializers.ModelSerializer):
 
     nr_of_areas = serializers.SerializerMethodField()
     aggregationareas = serializers.PrimaryKeyRelatedField(many=True, read_only=True, source='aggregationarea_set')
+    shapefile = serializers.FileField(allow_null=True, required=False)
+    name_column = serializers.CharField(allow_null=True, required=False)
 
     class Meta:
         model = AggregationLayer
