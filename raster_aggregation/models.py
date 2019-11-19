@@ -17,6 +17,18 @@ class AggregationLayer(models.Model):
     """
     Source data for aggregation layers and meta information.
     """
+    UNPROCESSED = 'Unprocessed'
+    PENDING = 'Pending'
+    PROCESSING = 'Processing'
+    FINISHED = 'Finished'
+    FAILED = 'Failed'
+    ST_STATUS_CHOICES = (
+        (UNPROCESSED, UNPROCESSED),
+        (PENDING, PENDING),
+        (PROCESSING, PROCESSING),
+        (FINISHED, FINISHED),
+        (FAILED, FAILED),
+    )
     name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     shapefile = models.FileField(upload_to='shapefiles/aggregationlayers', blank=True, null=True)
@@ -29,26 +41,29 @@ class AggregationLayer(models.Model):
     extent = models.PolygonField(srid=WEB_MERCATOR_SRID, editable=False, null=True)
     nr_of_areas = models.IntegerField(default=0, editable=False)
     modified = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=20, choices=ST_STATUS_CHOICES, default=UNPROCESSED)
 
     def __str__(self):
-        return '{name} ({count} divisions)'.format(
+        return '{name} ({count} divisions | {status})'.format(
             name=self.name,
-            count=self.aggregationarea_set.all().count()
+            count=self.aggregationarea_set.all().count(),
+            status=self.status,
         )
 
-    def log(self, msg, reset=False):
+    def log(self, msg, status=None):
         """
         Write a message to the parse log of the aggregationlayer instance.
         """
         # Prepare datetime stamp for log
         now = '[{0}] '.format(datetime.datetime.now().strftime('%Y-%m-%d %T'))
-
-        # Write log, reset if requested
-        if reset:
-            self.parse_log = now + msg
-        else:
-            self.parse_log += '\n' + now + msg
-
+        # Update status if requested.
+        if status:
+            self.status = status
+        # Ensure log is not null.
+        if not self.parse_log:
+            self.parse_log = ''
+        # Write log message.
+        self.parse_log += '\n' + now + msg
         self.save()
 
 
