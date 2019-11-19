@@ -34,10 +34,11 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
 
     def parse_shapefile_data(self, request, queryset):
         for lyr in queryset.all():
+            lyr.log('Scheduled shapefile parsing.', AggregationLayer.SCHEDULED)
             aggregation_layer_parser.delay(lyr.id)
             self.message_user(
                 request,
-                "Parsing shapefile asynchronously, please check the collection parse log for status",
+                "Parsing shapefile asynchronously, please check the collection parse log for status.",
             )
 
     def compute_value_count(self, request, queryset):

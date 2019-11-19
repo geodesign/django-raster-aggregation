@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from raster_aggregation.models import AggregationLayer
+
 from .aggregation_testcase import RasterAggregationTestCase
 
 
@@ -31,3 +33,4 @@ class AggregationAreaParseTests(RasterAggregationTestCase):
         self.assertTrue(
             'Finished parsing Aggregation Layer' in self.agglayer.parse_log
         )
+        self.assertEqual(self.agglayer.status, AggregationLayer.FINISHED)
