@@ -26,7 +26,7 @@ def aggregation_layer_parser(agglayer_id):
     agglayer = AggregationLayer.objects.get(id=agglayer_id)
 
     # Clean previous parse log
-    agglayer.log('Started parsing Aggregation Layer {0}'.format(agglayer.id))
+    agglayer.log('Started parsing Aggregation Layer {0}.'.format(agglayer.id), AggregationLayer.PROCESSING)
 
     tmpdir = tempfile.mkdtemp()
 
@@ -43,7 +43,7 @@ def aggregation_layer_parser(agglayer_id):
         shapefile.close()
     except:
         shutil.rmtree(tmpdir)
-        agglayer.log('Error: Could not download file, aborted parsing')
+        agglayer.log('Error: Could not download file, aborted parsing.', AggregationLayer.FAILED)
         return
 
     # Open and extract zipfile
@@ -52,7 +52,7 @@ def aggregation_layer_parser(agglayer_id):
         zf.extractall(tmpdir)
     except:
         shutil.rmtree(tmpdir)
-        agglayer.log('Error: Could not open zipfile, aborted parsing')
+        agglayer.log('Error: Could not open zipfile, aborted parsing.', AggregationLayer.FAILED)
         return
 
     # Remove zipfile
@@ -64,14 +64,15 @@ def aggregation_layer_parser(agglayer_id):
         lyr = ds[0]
     except:
         shutil.rmtree(tmpdir)
-        agglayer.log('Error: Failed to extract layer from shapefile, aborted parsing')
+        agglayer.log('Error: Failed to extract layer from shapefile, aborted parsing.', AggregationLayer.FAILED)
         return
 
     # Check if name column exists
     if agglayer.name_column.lower() not in [field.lower() for field in lyr.fields]:
         agglayer.log(
             'Error: Name column "{0}" not found, aborted parsing. '
-            'Available columns: {1}'.format(agglayer.name_column, lyr.fields)
+            'Available columns: {1}'.format(agglayer.name_column, lyr.fields),
+            AggregationLayer.FAILED
         )
         return
 
@@ -84,7 +85,7 @@ def aggregation_layer_parser(agglayer_id):
         ct = CoordTransform(lyr.srs, SpatialReference(WEB_MERCATOR_SRID))
     except:
         shutil.rmtree(tmpdir)
-        agglayer.log('Error: Layer srs not specified, aborted parsing')
+        agglayer.log('Error: Layer srs not specified, aborted parsing', AggregationLayer.FAILED)
         return
 
     # Remove existing patches before re-creating them
@@ -153,7 +154,7 @@ def aggregation_layer_parser(agglayer_id):
     agglayer.extent = Polygon.from_bbox(extent)
     agglayer.save()
 
-    agglayer.log('Finished parsing Aggregation Layer {0}'.format(agglayer.id))
+    agglayer.log('Finished parsing Aggregation Layer {0}'.format(agglayer.id), AggregationLayer.FINISHED)
 
     # Remove tempdir with unzipped shapefile
     shutil.rmtree(tmpdir)
