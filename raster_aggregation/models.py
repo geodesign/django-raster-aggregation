@@ -172,13 +172,14 @@ class ValueCountResult(models.Model):
     def __str__(self):
         return "{id} - {area}".format(id=self.id, area=self.aggregationarea.name)
 
-    def populate(self):
+    def populate(self, save=True):
         """
         Compute value count using the objects value count parameters.
         """
         # Update status
         self.status = self.COMPUTING
-        self.save()
+        if save:
+            self.save()
 
         # Compute range for valuecounts if provided.
         if self.range_min is not None and self.range_max is not None:
@@ -213,7 +214,8 @@ class ValueCountResult(models.Model):
         except:
             self.status = self.FAILED
 
-        self.save()
+        if save:
+            self.save()
 
 
 @receiver(rasterlayers_parser_ended, sender=RasterLayer)
