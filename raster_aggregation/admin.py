@@ -32,6 +32,8 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
 
     actions = ['parse_shapefile_data', 'compute_value_count', ]
 
+    search_fields = ('name', )
+
     def parse_shapefile_data(self, request, queryset):
         for lyr in queryset.all():
             lyr.log('Scheduled shapefile parsing.', AggregationLayer.SCHEDULED)
@@ -95,7 +97,12 @@ class AggregationLayerGroupAdmin(admin.ModelAdmin):
     exclude = ['aggregationlayers']
 
 
-admin.site.register(AggregationArea, admin.OSMGeoAdmin)
+class AggregationAreaAdmin(admin.OSMGeoAdmin):
+    raw_id_fields = ('aggregationlayer', )
+    search_fields = ('name', )
+
+
+admin.site.register(AggregationArea, AggregationAreaAdmin)
 admin.site.register(ValueCountResult, ValueCountResultAdmin)
 admin.site.register(AggregationLayer, ComputeActivityAggregatesModelAdmin)
 admin.site.register(AggregationLayerGroup, AggregationLayerGroupAdmin)
