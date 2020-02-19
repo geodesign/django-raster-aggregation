@@ -36,7 +36,7 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
 
     def parse_shapefile_data(self, request, queryset):
         for lyr in queryset.all():
-            lyr.log('Scheduled shapefile parsing.', AggregationLayer.SCHEDULED)
+            lyr.log('Scheduled shapefile parsing.', AggregationLayer.PENDING)
             aggregation_layer_parser.delay(lyr.id)
             self.message_user(
                 request,
