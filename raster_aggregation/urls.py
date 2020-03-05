@@ -15,7 +15,7 @@ router.register(r'aggregationlayer', AggregationLayerViewSet)
 router.register(
     r'vtiles/(?P<aggregationlayer>[^/]+)/(?P<z>[0-9]+)/(?P<x>[0-9]+)/(?P<y>[0-9]+).(?P<frmt>json|pbf)',
     AggregationLayerVectorTilesViewSet,
-    base_name='vectortiles'
+    basename='vectortiles'
 )
 
 urlpatterns = [
