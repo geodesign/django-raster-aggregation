@@ -152,13 +152,13 @@ class ValueCountResult(models.Model):
     range_min = models.FloatField(blank=True, null=True, help_text='Lower cutoff limit for valuecounts. Only used if upper cutoff is also specified.')
     range_max = models.FloatField(blank=True, null=True, help_text='Upper cutoff limit for valuecounts. Only used if lower cutoff is also specified.')
 
-    value = HStoreField(default=dict)
+    value = HStoreField(default=dict, db_index=True)
     created = models.DateTimeField(auto_now=True)
     status = models.IntegerField(choices=STATUS, default=SCHEDULED)
-    stats_min = models.FloatField(editable=False, blank=True, null=True)
-    stats_max = models.FloatField(editable=False, blank=True, null=True)
-    stats_avg = models.FloatField(editable=False, blank=True, null=True)
-    stats_std = models.FloatField(editable=False, blank=True, null=True)
+    stats_min = models.FloatField(editable=False, blank=True, null=True, db_index=True)
+    stats_max = models.FloatField(editable=False, blank=True, null=True, db_index=True)
+    stats_avg = models.FloatField(editable=False, blank=True, null=True, db_index=True)
+    stats_std = models.FloatField(editable=False, blank=True, null=True, db_index=True)
 
     stats_cumsum_t0 = models.FloatField(editable=False, blank=True, null=True, help_text='Nr of pixels counted.')
     stats_cumsum_t1 = models.FloatField(editable=False, blank=True, null=True, help_text='Sum of pixel values.')
