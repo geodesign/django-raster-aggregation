@@ -104,7 +104,7 @@ class AggregationArea(models.Model):
     """
     name = models.TextField(blank=True, null=True)
     aggregationlayer = models.ForeignKey(AggregationLayer, blank=True, null=True, on_delete=models.CASCADE)
-    attributes = HStoreField(default=dict)
+    attributes = HStoreField(default=dict, blank=True)
     geom = models.MultiPolygonField(srid=WEB_MERCATOR_SRID)
     geom_simplified = models.MultiPolygonField(srid=WEB_MERCATOR_SRID, blank=True, null=True)
 
