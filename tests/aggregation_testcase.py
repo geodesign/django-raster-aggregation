@@ -50,7 +50,7 @@ class RasterAggregationTestCase(TestCase):
             # Create aggregation layer
             self.agglayer = AggregationLayer.objects.create(
                 name='My Aggregation Layer',
-                name_column='name',
+                name_column='Name',
                 shapefile=shapefile
             )
 
