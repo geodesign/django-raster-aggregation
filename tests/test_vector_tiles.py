@@ -51,6 +51,10 @@ class VectorTilesTests(RasterAggregationTestCase):
             result['My Aggregation Layer']['features'][1]['properties']['name'],
         )
         self.assertEqual(
+            'An area that covers everything.',
+            result['My Aggregation Layer']['features'][1]['properties']['LongName'],
+        )
+        self.assertEqual(
             [3267, 3986],
             result['My Aggregation Layer']['features'][0]['geometry']['coordinates'][0][0][0],
         )

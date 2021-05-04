@@ -137,7 +137,7 @@ class AggregationLayerVectorTilesViewSet(ListModelMixin, viewsets.GenericViewSet
             geom__intersects=bounds,
         ).annotate(
             intersection=Intersection('geom', bounds_buffer)
-        ).only('id', 'name')
+        ).only('id', 'name', 'attributes')
 
         # Render intersection as vector tile in two different available formats.
         if frmt == 'json':
@@ -146,16 +146,23 @@ class AggregationLayerVectorTilesViewSet(ListModelMixin, viewsets.GenericViewSet
             result = '{"type": "FeatureCollection","features":[' + result + ']}'
             return HttpResponse(result, content_type="application/json")
         elif frmt == 'pbf':
-            features = [
-                {
+            # Construct feature list.
+            features = []
+            for dat in result:
+                # Add all attributes as properties.
+                props = dat.attributes
+                # Remove the original name field.
+                props.pop(lyr.name_column, None)
+                # Ensure ID and name are set in properties.
+                props.update({
+                    "id": dat.id,
+                    "name": dat.name,
+                })
+                # Add geom and props to feature list.
+                features.append({
                     "geometry": bytes(dat.intersection.wkb),
-                    "properties": {
-                        "id": dat.id,
-                        "name": dat.name,
-                        "attributes": dat.attributes,
-                    },
-                } for dat in result
-            ]
+                    "properties": props,
+                })
             data = [
                 {
                     "name": lyr.name,
