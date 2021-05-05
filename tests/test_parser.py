@@ -13,11 +13,11 @@ class AggregationAreaParseTests(RasterAggregationTestCase):
     def test_aggregation_area_properties(self):
         self.assertEqual(
             self.agglayer.aggregationarea_set.get(name='St Petersburg').attributes,
-            {'id': '0', 'Name': 'St Petersburg'},
+            {'id': '0', 'Name': 'St Petersburg', 'LongName': 'Saint Petersburg County'},
         )
         self.assertEqual(
             self.agglayer.aggregationarea_set.get(name='Coverall').attributes,
-            {'id': '1', 'Name': 'Coverall'},
+            {'id': '1', 'Name': 'Coverall', 'LongName': 'An area that covers everything.'},
         )
 
     def test_agglayer_fields_property(self):

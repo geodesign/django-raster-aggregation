@@ -31,7 +31,7 @@ class VectorTilesTests(RasterAggregationTestCase):
             result['features'][1]['properties']['name'],
         )
         self.assertEqual(
-            [-9220429.22801057, 3228174.60948196],
+            [-9220428.84343788, 3228174.36658215],
             result['features'][0]['geometry']['coordinates'][0][0][0],
         )
 
@@ -55,7 +55,7 @@ class VectorTilesTests(RasterAggregationTestCase):
             result['My Aggregation Layer']['features'][1]['properties']['LongName'],
         )
         self.assertEqual(
-            [3267, 3986],
+            [3268, 3986],
             result['My Aggregation Layer']['features'][0]['geometry']['coordinates'][0][0][0],
         )
 
