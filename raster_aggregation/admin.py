@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from raster.models import RasterLayer
 
 from django import forms
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.contrib.gis import admin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -72,7 +73,7 @@ class ComputeActivityAggregatesModelAdmin(admin.ModelAdmin):
         # Before posting, prepare empty action form
         if not form:
             form = SelectLayerActionForm(initial={
-                '_selected_action': request.POST.getlist(admin.ACTION_CHECKBOX_NAME),
+                '_selected_action': request.POST.getlist(ACTION_CHECKBOX_NAME),
             })
 
         return render(
